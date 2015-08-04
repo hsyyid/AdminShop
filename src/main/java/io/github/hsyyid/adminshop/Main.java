@@ -144,9 +144,10 @@ public class Main
 
 			if (thisShop != null && event.getEntity().hasPermission("adminshop.remove"))
 			{
+				event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
 				adminShops.remove(thisShop);
 			}
-			else
+			else if(thisShop != null)
 			{
 				event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
 				event.setCancelled(true);
