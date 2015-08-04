@@ -131,7 +131,7 @@ public class Main
 	@Subscribe
 	public void onPlayerBreakBlock(PlayerBreakBlockEvent event)
 	{
-		if (event.getBlock().getBlock() != null && event.getBlock().getBlock().getType() == BlockTypes.WALL_SIGN)
+		if (event.getBlock().getBlock() != null && (event.getBlock().getBlock().getType() == BlockTypes.WALL_SIGN || event.getBlock().getBlock().getType() == BlockTypes.STANDING_SIGN))
 		{
 			AdminShop thisShop = null;
 			for (AdminShop shop : adminShops)
@@ -142,9 +142,14 @@ public class Main
 				}
 			}
 
-			if (thisShop != null)
+			if (thisShop != null && event.getEntity().hasPermission("adminshop.remove"))
 			{
 				adminShops.remove(thisShop);
+			}
+			else
+			{
+				event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
+				event.setCancelled(true);
 			}
 		}
 	}
