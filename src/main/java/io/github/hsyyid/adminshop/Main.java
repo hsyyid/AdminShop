@@ -1,6 +1,8 @@
 package io.github.hsyyid.adminshop;
 
+import io.github.hsyyid.adminshop.cmdexecutors.SetItemShopExecutor;
 import io.github.hsyyid.adminshop.utils.AdminShop;
+import io.github.hsyyid.adminshop.utils.ShopItem;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,6 +28,8 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.DefaultConfig;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.command.args.GenericArguments;
+import org.spongepowered.api.util.command.spec.CommandSpec;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.TeleportHelper;
 
@@ -41,6 +45,7 @@ public class Main
 	public static ConfigurationLoader<CommentedConfigurationNode> configurationManager;
 	public static TeleportHelper helper;
 	public static ArrayList<AdminShop> adminShops = new ArrayList<AdminShop>();
+	public static ArrayList<ShopItem> items = new ArrayList<ShopItem>();
 
 	@Inject
 	private Logger logger;
@@ -82,6 +87,15 @@ public class Main
 			getLogger().error("The default configuration could not be loaded or created!");
 		}
 
+		CommandSpec setItemShopCommandSpec = CommandSpec.builder()
+			.description(Texts.of("Sets Item for a AdminShop"))
+			.permission("adminshop.setitem")
+			.arguments(GenericArguments.onlyOne(GenericArguments.string(Texts.of("item ID"))))
+			.executor(new SetItemShopExecutor())
+			.build();
+
+		game.getCommandDispatcher().register(this, setItemShopCommandSpec, "setitem");
+
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop was made by HassanS6000!");
 		getLogger().info("Please post all errors on the Sponge Thread or on GitHub!");
@@ -94,7 +108,7 @@ public class Main
 	public void onSignChange(SignChangeEvent event)
 	{
 		Player player = null;
-		if(event.getCause().isPresent() && event.getCause().get().getCause() instanceof Player)
+		if (event.getCause().isPresent() && event.getCause().get().getCause() instanceof Player)
 		{
 			player = (Player) event.getCause().get().getCause();
 		}
@@ -109,7 +123,7 @@ public class Main
 
 		if (line0.equals("[AdminShop]"))
 		{
-			if(player != null && player.hasPermission("adminshop.create"))
+			if (player != null && player.hasPermission("adminshop.create"))
 			{
 				int itemAmount = Integer.parseInt(line1);
 				double price = Double.parseDouble(line2);
@@ -119,7 +133,7 @@ public class Main
 				signData.setLine(0, Texts.of(TextColors.DARK_BLUE, "[AdminShop]"));
 				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
 			}
-			else if(player != null)
+			else if (player != null)
 			{
 				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
 			}
@@ -147,7 +161,7 @@ public class Main
 				event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
 				adminShops.remove(thisShop);
 			}
-			else if(thisShop != null)
+			else if (thisShop != null)
 			{
 				event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
 				event.setCancelled(true);
@@ -171,24 +185,45 @@ public class Main
 
 			if (thisShop != null)
 			{
-				int itemAmount = thisShop.getItemAmount();
-				double price = thisShop.getPrice();
-				String itemName = thisShop.getItemName();
-
-				Player player = event.getEntity();
-				TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance();
-				AccountManager accountManager = totalEconomy.getAccountManager();
-				BigDecimal amount = new BigDecimal(price);
-
-				if (accountManager.getBalance(player).intValue() > amount.intValue())
+				ShopItem item = null;
+				for(ShopItem i : items)
 				{
-					accountManager.removeFromBalance(player, amount);
-					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
-					game.getCommandDispatcher().process(game.getServer().getConsole(), "give" + " " + player.getName() + " " + itemName + " " + itemAmount);
+					if(i.getPlayer().getUniqueId() == event.getEntity().getUniqueId())
+					{
+						item = i;
+						break;
+					}
+				}
+				
+				if(item != null)
+				{
+					adminShops.remove(thisShop);
+					thisShop.setItemName(item.getItemID());
+					adminShops.add(thisShop);
+					items.remove(item);
+					event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
 				}
 				else
 				{
-					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You don't have enough money to do that!"));
+					int itemAmount = thisShop.getItemAmount();
+					double price = thisShop.getPrice();
+					String itemName = thisShop.getItemName();
+
+					Player player = event.getEntity();
+					TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance();
+					AccountManager accountManager = totalEconomy.getAccountManager();
+					BigDecimal amount = new BigDecimal(price);
+
+					if (accountManager.getBalance(player).intValue() > amount.intValue())
+					{
+						accountManager.removeFromBalance(player, amount);
+						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
+						game.getCommandDispatcher().process(game.getServer().getConsole(), "give" + " " + player.getName() + " " + itemName + " " + itemAmount);
+					}
+					else
+					{
+						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You don't have enough money to do that!"));
+					}
 				}
 
 			}
