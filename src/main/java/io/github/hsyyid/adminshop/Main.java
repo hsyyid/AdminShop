@@ -5,11 +5,8 @@ import io.github.hsyyid.adminshop.utils.AdminShop;
 import io.github.hsyyid.adminshop.utils.LocationAdapter;
 import io.github.hsyyid.adminshop.utils.ShopItem;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -121,7 +118,7 @@ public class Main
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			;
 		}
 		adminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
 		
@@ -131,7 +128,7 @@ public class Main
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			;
 		}
 		buyAdminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
 		
