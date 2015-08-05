@@ -45,6 +45,7 @@ public class Main
 	public static ConfigurationLoader<CommentedConfigurationNode> configurationManager;
 	public static TeleportHelper helper;
 	public static ArrayList<AdminShop> adminShops = new ArrayList<AdminShop>();
+	public static ArrayList<AdminShop> buyAdminShops = new ArrayList<AdminShop>();
 	public static ArrayList<ShopItem> items = new ArrayList<ShopItem>();
 
 	@Inject
@@ -138,6 +139,23 @@ public class Main
 				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
 			}
 		}
+		else if (line0.equals("[AdminShopSell]"))
+		{
+			if (player != null && player.hasPermission("adminshop.create"))
+			{
+				int itemAmount = Integer.parseInt(line1);
+				double price = Double.parseDouble(line2);
+				String itemName = line3;
+				AdminShop shop = new AdminShop(itemAmount, price, itemName, signLocation);
+				buyAdminShops.add(shop);
+				signData.setLine(0, Texts.of(TextColors.DARK_BLUE, "[AdminShopSell]"));
+				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
+			}
+			else if (player != null)
+			{
+				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
+			}
+		}
 
 		event.setNewData(signData);
 	}
@@ -166,6 +184,28 @@ public class Main
 				event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
 				event.setCancelled(true);
 			}
+			else
+			{
+				AdminShop thisBuyShop = null;
+				for (AdminShop shop : buyAdminShops)
+				{
+					if (shop.getSignLocation().getX() == event.getBlock().getX() && shop.getSignLocation().getY() == event.getBlock().getY() && shop.getSignLocation().getZ() == event.getBlock().getZ())
+					{
+						thisBuyShop = shop;
+					}
+				}
+
+				if (thisBuyShop != null && event.getEntity().hasPermission("adminshop.remove"))
+				{
+					event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
+					buyAdminShops.remove(thisBuyShop);
+				}
+				else if (thisBuyShop != null)
+				{
+					event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
+					event.setCancelled(true);
+				}
+			}
 		}
 	}
 
@@ -186,16 +226,16 @@ public class Main
 			if (thisShop != null)
 			{
 				ShopItem item = null;
-				for(ShopItem i : items)
+				for (ShopItem i : items)
 				{
-					if(i.getPlayer().getUniqueId() == event.getEntity().getUniqueId())
+					if (i.getPlayer().getUniqueId() == event.getEntity().getUniqueId())
 					{
 						item = i;
 						break;
 					}
 				}
-				
-				if(item != null)
+
+				if (item != null)
 				{
 					adminShops.remove(thisShop);
 					thisShop.setItemName(item.getItemID());
@@ -225,7 +265,61 @@ public class Main
 						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You don't have enough money to do that!"));
 					}
 				}
+			}
+			else
+			{
+				AdminShop thisBuyShop = null;
+				for (AdminShop chestShop : buyAdminShops)
+				{
+					if (chestShop.getSignLocation().getX() == event.getBlock().getX() && chestShop.getSignLocation().getY() == event.getBlock().getY() && chestShop.getSignLocation().getZ() == event.getBlock().getZ())
+					{
+						thisBuyShop = chestShop;
+					}
+				}
+				
+				if (thisBuyShop != null)
+				{
+					ShopItem item = null;
+					for (ShopItem i : items)
+					{
+						if (i.getPlayer().getUniqueId() == event.getEntity().getUniqueId())
+						{
+							item = i;
+							break;
+						}
+					}
 
+					if (item != null)
+					{
+						buyAdminShops.remove(thisBuyShop);
+						thisBuyShop.setItemName(item.getItemID());
+						buyAdminShops.add(thisBuyShop);
+						items.remove(item);
+						event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
+					}
+					else
+					{
+						int itemAmount = thisBuyShop.getItemAmount();
+						double price = thisBuyShop.getPrice();
+						String itemName = thisBuyShop.getItemName();
+
+						Player player = event.getEntity();
+						TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance();
+						AccountManager accountManager = totalEconomy.getAccountManager();
+						BigDecimal amount = new BigDecimal(price);
+
+						if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
+						{
+							player.setItemInHand(null);
+							accountManager.addToBalance(player, amount, true);
+							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+						}
+						else
+						{
+							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
+						}
+					}
+				}
 			}
 		}
 	}
