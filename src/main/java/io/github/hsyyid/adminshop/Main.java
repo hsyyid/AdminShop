@@ -48,7 +48,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 
-@Plugin(id = "AdminShop", name = "AdminShop", version = "0.1", dependencies = "required-after:TotalEconomy")
+@Plugin(id = "AdminShop", name = "AdminShop", version = "0.2", dependencies = "required-after:TotalEconomy")
 public class Main
 {
 	public static Game game = null;
@@ -393,10 +393,19 @@ public class Main
 						TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance();
 						AccountManager accountManager = totalEconomy.getAccountManager();
 						BigDecimal amount = new BigDecimal(price);
-
+						int quantityInHand = 0;
+						
 						if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
 						{
 							player.setItemInHand(null);
+							accountManager.addToBalance(player, amount, true);
+							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+						}
+						else if(player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
+						{
+							quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
+							player.setItemInHand(null);
+							game.getCommandDispatcher().process(game.getServer().getConsole(), "give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
 							accountManager.addToBalance(player, amount, true);
 							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 						}
