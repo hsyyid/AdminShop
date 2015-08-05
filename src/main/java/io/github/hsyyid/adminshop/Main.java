@@ -118,20 +118,36 @@ public class Main
 		}
 		catch (IOException e)
 		{
-			;
+			getLogger().error("Could not read JSON file!");
 		}
-		adminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
-		
+
+		if(json != null)
+		{
+			adminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
+		}
+		else
+		{
+			getLogger().error("Could not read JSON file!");
+		}
+
 		try
 		{
 			json = readFile("BuyAdminShops.json", StandardCharsets.UTF_8);
 		}
 		catch (IOException e)
 		{
-			;
+			getLogger().error("Could not read JSON file!");
 		}
-		buyAdminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
 		
+		if(json != null)
+		{
+			buyAdminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
+		}
+		else
+		{
+			getLogger().error("Could not read JSON file!");
+		}
+
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop was made by HassanS6000!");
 		getLogger().info("Please post all errors on the Sponge Thread or on GitHub!");
@@ -140,13 +156,13 @@ public class Main
 		getLogger().info("AdminShop loaded!");
 	}
 
-	static String readFile(String path, Charset encoding) 
-		  throws IOException 
-		{
-		  byte[] encoded = Files.readAllBytes(Paths.get(path));
-		  return new String(encoded, encoding);
-		}
-	
+	static String readFile(String path, Charset encoding)
+		throws IOException
+	{
+		byte[] encoded = Files.readAllBytes(Paths.get(path));
+		return new String(encoded, encoding);
+	}
+
 	@Subscribe
 	public void onServerStopping(ServerStoppingEvent event)
 	{
@@ -394,14 +410,14 @@ public class Main
 						AccountManager accountManager = totalEconomy.getAccountManager();
 						BigDecimal amount = new BigDecimal(price);
 						int quantityInHand = 0;
-						
+
 						if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
 						{
 							player.setItemInHand(null);
 							accountManager.addToBalance(player, amount, true);
 							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 						}
-						else if(player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
+						else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
 						{
 							quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
 							player.setItemInHand(null);
