@@ -123,7 +123,6 @@ public class Main
 		{
 			e.printStackTrace();
 		}
-		getLogger().warn(json);
 		adminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
 		
 		try
@@ -134,7 +133,6 @@ public class Main
 		{
 			e.printStackTrace();
 		}
-		getLogger().warn(json);
 		buyAdminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
 		
 		getLogger().info("-----------------------------");
