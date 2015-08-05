@@ -1,6 +1,5 @@
 package io.github.hsyyid.adminshop.utils;
 
-import org.spongepowered.api.entity.player.Player;
 import org.spongepowered.api.world.Location;
 
 public class AdminShop

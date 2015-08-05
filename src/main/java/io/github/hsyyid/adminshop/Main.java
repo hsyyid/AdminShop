@@ -2,12 +2,23 @@ package io.github.hsyyid.adminshop;
 
 import io.github.hsyyid.adminshop.cmdexecutors.SetItemShopExecutor;
 import io.github.hsyyid.adminshop.utils.AdminShop;
+import io.github.hsyyid.adminshop.utils.LocationAdapter;
 import io.github.hsyyid.adminshop.utils.ShopItem;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
@@ -24,6 +35,7 @@ import org.spongepowered.api.event.block.tileentity.SignChangeEvent;
 import org.spongepowered.api.event.entity.player.PlayerBreakBlockEvent;
 import org.spongepowered.api.event.entity.player.PlayerInteractBlockEvent;
 import org.spongepowered.api.event.state.ServerStartedEvent;
+import org.spongepowered.api.event.state.ServerStoppingEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.DefaultConfig;
 import org.spongepowered.api.text.Texts;
@@ -35,6 +47,8 @@ import org.spongepowered.api.world.TeleportHelper;
 
 import com.erigitic.config.AccountManager;
 import com.erigitic.main.TotalEconomy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 
 @Plugin(id = "AdminShop", name = "AdminShop", version = "0.1", dependencies = "required-after:TotalEconomy")
@@ -47,6 +61,7 @@ public class Main
 	public static ArrayList<AdminShop> adminShops = new ArrayList<AdminShop>();
 	public static ArrayList<AdminShop> buyAdminShops = new ArrayList<AdminShop>();
 	public static ArrayList<ShopItem> items = new ArrayList<ShopItem>();
+	private Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(Location.class, new LocationAdapter()).create();
 
 	@Inject
 	private Logger logger;
@@ -68,8 +83,10 @@ public class Main
 	public void onServerStart(ServerStartedEvent event)
 	{
 		getLogger().info("AdminShop loading...");
+
 		game = event.getGame();
 		helper = game.getTeleportHelper();
+
 		// Config File
 		try
 		{
@@ -97,12 +114,86 @@ public class Main
 
 		game.getCommandDispatcher().register(this, setItemShopCommandSpec, "setitem");
 
+		String json = null;
+		try
+		{
+			json = readFile("AdminShops.json", StandardCharsets.UTF_8);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		getLogger().warn(json);
+		adminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
+		
+		try
+		{
+			json = readFile("BuyAdminShops.json", StandardCharsets.UTF_8);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		getLogger().warn(json);
+		buyAdminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
+		
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop was made by HassanS6000!");
 		getLogger().info("Please post all errors on the Sponge Thread or on GitHub!");
 		getLogger().info("Have fun, and enjoy! :D");
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop loaded!");
+	}
+
+	static String readFile(String path, Charset encoding) 
+		  throws IOException 
+		{
+		  byte[] encoded = Files.readAllBytes(Paths.get(path));
+		  return new String(encoded, encoding);
+		}
+	
+	@Subscribe
+	public void onServerStopping(ServerStoppingEvent event)
+	{
+		String json = gson.toJson(adminShops);
+		String j = gson.toJson(buyAdminShops);
+		try
+		{
+			// Assume default encoding.
+			FileWriter fileWriter = new FileWriter("AdminShops.json");
+
+			// Always wrap FileWriter in BufferedWriter.
+			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+			bufferedWriter.write(json);
+
+			bufferedWriter.flush();
+			// Always close files.
+			bufferedWriter.close();
+		}
+		catch (IOException ex)
+		{
+			getLogger().error("Could not save JSON file!");
+		}
+
+		try
+		{
+			// Assume default encoding.
+			FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
+
+			// Always wrap FileWriter in BufferedWriter.
+			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+			bufferedWriter.write(j);
+
+			bufferedWriter.flush();
+			// Always close files.
+			bufferedWriter.close();
+		}
+		catch (IOException ex)
+		{
+			getLogger().error("Could not save JSON file!");
+		}
 	}
 
 	@Subscribe
@@ -276,7 +367,7 @@ public class Main
 						thisBuyShop = chestShop;
 					}
 				}
-				
+
 				if (thisBuyShop != null)
 				{
 					ShopItem item = null;
