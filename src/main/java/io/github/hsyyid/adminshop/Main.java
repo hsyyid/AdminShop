@@ -1,31 +1,24 @@
 package io.github.hsyyid.adminshop;
 
+import org.spongepowered.api.data.key.Keys;
+
+import com.erigitic.config.AccountManager;
+import com.erigitic.main.TotalEconomy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.inject.Inject;
 import io.github.hsyyid.adminshop.cmdexecutors.SetItemShopExecutor;
 import io.github.hsyyid.adminshop.utils.AdminShop;
 import io.github.hsyyid.adminshop.utils.LocationAdapter;
 import io.github.hsyyid.adminshop.utils.ShopItem;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
-
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.Sign;
-import org.spongepowered.api.data.manipulator.tileentity.SignData;
+import org.spongepowered.api.data.manipulator.mutable.tileentity.SignData;
 import org.spongepowered.api.entity.player.Player;
 import org.spongepowered.api.event.Subscribe;
 import org.spongepowered.api.event.block.tileentity.SignChangeEvent;
@@ -42,11 +35,17 @@ import org.spongepowered.api.util.command.spec.CommandSpec;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.TeleportHelper;
 
-import com.erigitic.config.AccountManager;
-import com.erigitic.main.TotalEconomy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.inject.Inject;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 @Plugin(id = "AdminShop", name = "AdminShop", version = "0.2", dependencies = "required-after:TotalEconomy")
 public class Main
@@ -217,12 +216,12 @@ public class Main
 		}
 
 		Sign sign = event.getTile();
-		Location signLocation = sign.getBlock();
+		Location signLocation = sign.getLocation();
 		SignData signData = event.getNewData();
-		String line0 = Texts.toPlain(signData.getLine(0));
-		String line1 = Texts.toPlain(signData.getLine(1));
-		String line2 = Texts.toPlain(signData.getLine(2));
-		String line3 = Texts.toPlain(signData.getLine(3));
+		String line0 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(0));
+        String line1 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(1));
+        String line2 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(2));
+        String line3 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(3));
 
 		if (line0.equals("[AdminShop]"))
 		{
@@ -233,7 +232,7 @@ public class Main
 				String itemName = line3;
 				AdminShop shop = new AdminShop(itemAmount, price, itemName, signLocation);
 				adminShops.add(shop);
-				signData.setLine(0, Texts.of(TextColors.DARK_BLUE, "[AdminShop]"));
+				signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Texts.of(TextColors.DARK_BLUE, "[AdminShop]")));
 				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
 			}
 			else if (player != null)
@@ -250,7 +249,7 @@ public class Main
 				String itemName = line3;
 				AdminShop shop = new AdminShop(itemAmount, price, itemName, signLocation);
 				buyAdminShops.add(shop);
-				signData.setLine(0, Texts.of(TextColors.DARK_BLUE, "[AdminShopSell]"));
+				signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Texts.of(TextColors.DARK_BLUE, "[AdminShopSell]")));
 				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
 			}
 			else if (player != null)
@@ -265,12 +264,12 @@ public class Main
 	@Subscribe
 	public void onPlayerBreakBlock(PlayerBreakBlockEvent event)
 	{
-		if (event.getBlock().getBlock() != null && (event.getBlock().getBlock().getType() == BlockTypes.WALL_SIGN || event.getBlock().getBlock().getType() == BlockTypes.STANDING_SIGN))
+		if (event.getBlock() != null && (event.getBlock().getType() == BlockTypes.WALL_SIGN || event.getBlock().getType() == BlockTypes.STANDING_SIGN))
 		{
 			AdminShop thisShop = null;
 			for (AdminShop shop : adminShops)
 			{
-				if (shop.getSignLocation().getX() == event.getBlock().getX() && shop.getSignLocation().getY() == event.getBlock().getY() && shop.getSignLocation().getZ() == event.getBlock().getZ())
+				if (shop.getSignLocation().getX() == event.getLocation().getX() && shop.getSignLocation().getY() == event.getLocation().getY() && shop.getSignLocation().getZ() == event.getLocation().getZ())
 				{
 					thisShop = shop;
 				}
@@ -291,7 +290,7 @@ public class Main
 				AdminShop thisBuyShop = null;
 				for (AdminShop shop : buyAdminShops)
 				{
-					if (shop.getSignLocation().getX() == event.getBlock().getX() && shop.getSignLocation().getY() == event.getBlock().getY() && shop.getSignLocation().getZ() == event.getBlock().getZ())
+					if (shop.getSignLocation().getX() == event.getLocation().getX() && shop.getSignLocation().getY() == event.getLocation().getY() && shop.getSignLocation().getZ() == event.getLocation().getZ())
 					{
 						thisBuyShop = shop;
 					}
@@ -314,12 +313,12 @@ public class Main
 	@Subscribe
 	public void onPlayerInteractBlock(PlayerInteractBlockEvent event)
 	{
-		if (event.getBlock().getBlock() != null && (event.getBlock().getBlock().getType() == BlockTypes.WALL_SIGN || event.getBlock().getBlock().getType() == BlockTypes.STANDING_SIGN))
+		if (event.getBlock() != null && (event.getBlock().getType() == BlockTypes.WALL_SIGN || event.getBlock().getType() == BlockTypes.STANDING_SIGN))
 		{
 			AdminShop thisShop = null;
 			for (AdminShop chestShop : adminShops)
 			{
-				if (chestShop.getSignLocation().getX() == event.getBlock().getX() && chestShop.getSignLocation().getY() == event.getBlock().getY() && chestShop.getSignLocation().getZ() == event.getBlock().getZ())
+				if (chestShop.getSignLocation().getX() == event.getLocation().getX() && chestShop.getSignLocation().getY() == event.getLocation().getY() && chestShop.getSignLocation().getZ() == event.getLocation().getZ())
 				{
 					thisShop = chestShop;
 				}
@@ -356,9 +355,9 @@ public class Main
 					AccountManager accountManager = totalEconomy.getAccountManager();
 					BigDecimal amount = new BigDecimal(price);
 
-					if (accountManager.getBalance(player).intValue() > amount.intValue())
+					if (accountManager.getBalance(player.getUniqueId()).intValue() > amount.intValue())
 					{
-						accountManager.removeFromBalance(player, amount);
+						accountManager.removeFromBalance(player.getUniqueId(), amount);
 						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
 						game.getCommandDispatcher().process(game.getServer().getConsole(), "give" + " " + player.getName() + " " + itemName + " " + itemAmount);
 					}
@@ -373,7 +372,7 @@ public class Main
 				AdminShop thisBuyShop = null;
 				for (AdminShop chestShop : buyAdminShops)
 				{
-					if (chestShop.getSignLocation().getX() == event.getBlock().getX() && chestShop.getSignLocation().getY() == event.getBlock().getY() && chestShop.getSignLocation().getZ() == event.getBlock().getZ())
+					if (chestShop.getSignLocation().getX() == event.getLocation().getX() && chestShop.getSignLocation().getY() == event.getLocation().getY() && chestShop.getSignLocation().getZ() == event.getLocation().getZ())
 					{
 						thisBuyShop = chestShop;
 					}
@@ -414,7 +413,7 @@ public class Main
 						if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
 						{
 							player.setItemInHand(null);
-							accountManager.addToBalance(player, amount, true);
+							accountManager.addToBalance(player.getUniqueId(), amount, true);
 							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 						}
 						else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
@@ -422,7 +421,7 @@ public class Main
 							quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
 							player.setItemInHand(null);
 							game.getCommandDispatcher().process(game.getServer().getConsole(), "give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
-							accountManager.addToBalance(player, amount, true);
+							accountManager.addToBalance(player.getUniqueId(), amount, true);
 							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 						}
 						else

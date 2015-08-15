@@ -4,7 +4,6 @@ import org.spongepowered.api.entity.player.Player;
 
 public class ShopItem
 {
-	public Class type = this.getClass();
 	public Player player;
 	public String itemID;
 	

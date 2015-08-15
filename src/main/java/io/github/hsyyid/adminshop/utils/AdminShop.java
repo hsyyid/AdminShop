@@ -21,7 +21,7 @@ public class AdminShop
 	{
 		this.itemAmount = itemAmount;
 	}
-	
+
 	public void setSignLocation(Location signLocation)
 	{
 		this.signLocation = signLocation;
