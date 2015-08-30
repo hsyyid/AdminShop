@@ -1,15 +1,16 @@
 package io.github.hsyyid.adminshop.utils;
 
 import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class AdminShop
 {
 	public int itemAmount;
 	public double price;
 	public String itemName;
-	public Location signLocation;
+	public Location<World> signLocation;
 	
-	public AdminShop(int itemAmount, double price, String itemName, Location signLocation)
+	public AdminShop(int itemAmount, double price, String itemName, Location<World> signLocation)
 	{
 		this.itemAmount = itemAmount;
 		this.price = price;
@@ -22,7 +23,7 @@ public class AdminShop
 		this.itemAmount = itemAmount;
 	}
 
-	public void setSignLocation(Location signLocation)
+	public void setSignLocation(Location<World> signLocation)
 	{
 		this.signLocation = signLocation;
 	}
@@ -42,7 +43,7 @@ public class AdminShop
 		return itemAmount;
 	}
 	
-	public Location getSignLocation()
+	public Location<World> getSignLocation()
 	{
 		return signLocation;
 	}
