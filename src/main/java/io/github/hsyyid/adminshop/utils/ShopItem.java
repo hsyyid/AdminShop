@@ -1,6 +1,6 @@
 package io.github.hsyyid.adminshop.utils;
 
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 
 public class ShopItem
 {

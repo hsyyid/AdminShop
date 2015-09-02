@@ -23,17 +23,17 @@ import ninja.leaping.configurate.loader.ConfigurationLoader;
 
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.block.BlockTransaction;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.Sign;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.manipulator.mutable.tileentity.SignData;
-import org.spongepowered.api.entity.player.Player;
-import org.spongepowered.api.event.Subscribe;
-import org.spongepowered.api.event.block.tileentity.SignChangeEvent;
-import org.spongepowered.api.event.entity.player.PlayerBreakBlockEvent;
-import org.spongepowered.api.event.entity.player.PlayerInteractBlockEvent;
-import org.spongepowered.api.event.state.ServerStartedEvent;
-import org.spongepowered.api.event.state.ServerStoppingEvent;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.block.BreakBlockEvent;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
+import org.spongepowered.api.event.game.state.GameStartedServerEvent;
+import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.DefaultConfig;
 import org.spongepowered.api.text.Texts;
@@ -46,6 +46,7 @@ import org.spongepowered.api.world.World;
 
 import com.erigitic.config.AccountManager;
 import com.erigitic.main.TotalEconomy;
+import com.google.common.eventbus.Subscribe;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
@@ -79,7 +80,7 @@ public class Main
 	private ConfigurationLoader<CommentedConfigurationNode> confManager;
 
 	@Subscribe
-	public void onServerStart(ServerStartedEvent event)
+	public void onServerStart(GameStartedServerEvent event)
 	{
 		getLogger().info("AdminShop loading...");
 
@@ -167,7 +168,7 @@ public class Main
 	}
 
 	@Subscribe
-	public void onServerStopping(ServerStoppingEvent event)
+	public void onServerStopping(GameStoppingServerEvent event)
 	{
 		String json = gson.toJson(adminShops);
 		String j = gson.toJson(buyAdminShops);
@@ -211,17 +212,12 @@ public class Main
 	}
 
 	@Subscribe
-	public void onSignChange(SignChangeEvent event)
+	public void onSignChange(ChangeSignEvent.SourcePlayer event)
 	{
-		Player player = null;
-		if (event.getCause().isPresent() && event.getCause().get().getCause() instanceof Player)
-		{
-			player = (Player) event.getCause().get().getCause();
-		}
-
-		Sign sign = event.getTile();
+		Player player = event.getSourceEntity();
+		Sign sign = event.getTargetTile();
 		Location<World> signLocation = sign.getLocation();
-		SignData signData = event.getNewData();
+		SignData signData = event.getText();
 		String line0 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(0));
 		String line1 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(1));
 		String line2 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(2));
@@ -238,25 +234,25 @@ public class Main
 				adminShops.add(shop);				
 				String json = gson.toJson(adminShops);
 
-		        try
-		        {
-		            // Assume default encoding.
-		            FileWriter fileWriter = new FileWriter("AdminShops.json");
+				try
+				{
+					// Assume default encoding.
+					FileWriter fileWriter = new FileWriter("AdminShops.json");
 
-		            // Always wrap FileWriter in BufferedWriter.
-		            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+					// Always wrap FileWriter in BufferedWriter.
+					BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-		            bufferedWriter.write(json);
+					bufferedWriter.write(json);
 
-		            bufferedWriter.flush();
-		            // Always close files.
-		            bufferedWriter.close();
-		        }
-		        catch (IOException ex)
-		        {
-		            getLogger().error("Could not save JSON file!");
-		        }
-				
+					bufferedWriter.flush();
+					// Always close files.
+					bufferedWriter.close();
+				}
+				catch (IOException ex)
+				{
+					getLogger().error("Could not save JSON file!");
+				}
+
 				signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Texts.of(TextColors.DARK_BLUE, "[AdminShop]")));
 				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
 			}
@@ -274,26 +270,26 @@ public class Main
 				String itemName = line3;
 				AdminShop shop = new AdminShop(itemAmount, price, itemName, signLocation);
 				buyAdminShops.add(shop);
-		        String j = gson.toJson(buyAdminShops);
+				String j = gson.toJson(buyAdminShops);
 
-		        try
-		        {
-		            // Assume default encoding.
-		            FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
+				try
+				{
+					// Assume default encoding.
+					FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
 
-		            // Always wrap FileWriter in BufferedWriter.
-		            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+					// Always wrap FileWriter in BufferedWriter.
+					BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-		            bufferedWriter.write(j);
+					bufferedWriter.write(j);
 
-		            bufferedWriter.flush();
-		            // Always close files.
-		            bufferedWriter.close();
-		        }
-		        catch (IOException ex)
-		        {
-		            getLogger().error("Could not save JSON file!");
-		        }
+					bufferedWriter.flush();
+					// Always close files.
+					bufferedWriter.close();
+				}
+				catch (IOException ex)
+				{
+					getLogger().error("Could not save JSON file!");
+				}
 				signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Texts.of(TextColors.DARK_BLUE, "[AdminShopSell]")));
 				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
 			}
@@ -302,108 +298,109 @@ public class Main
 				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
 			}
 		}
-
-		event.setNewData(signData);
 	}
 
 	@Subscribe
-	public void onPlayerBreakBlock(PlayerBreakBlockEvent event)
+	public void onPlayerBreakBlock(BreakBlockEvent.SourcePlayer event)
 	{
-		if (event.getBlock() != null && (event.getBlock().getType() == BlockTypes.WALL_SIGN || event.getBlock().getType() == BlockTypes.STANDING_SIGN))
+		for(BlockTransaction transaction : event.getTransactions())
 		{
-			AdminShop thisShop = null;
-			for (AdminShop shop : adminShops)
+			if (transaction.getFinalReplacement().getState() != null && (transaction.getFinalReplacement().getState().getType() == BlockTypes.WALL_SIGN || transaction.getFinalReplacement().getState().getType() == BlockTypes.STANDING_SIGN))
 			{
-				if (shop.getSignLocation().getX() == event.getLocation().getX() && shop.getSignLocation().getY() == event.getLocation().getY() && shop.getSignLocation().getZ() == event.getLocation().getZ())
+				AdminShop thisShop = null;
+				for (AdminShop shop : adminShops)
 				{
-					thisShop = shop;
-				}
-			}
-
-			if (thisShop != null && event.getEntity().hasPermission("adminshop.remove"))
-			{
-				event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
-				adminShops.remove(thisShop);
-				
-				String json = gson.toJson(adminShops);
-		        try
-		        {
-		            // Assume default encoding.
-		            FileWriter fileWriter = new FileWriter("AdminShops.json");
-
-		            // Always wrap FileWriter in BufferedWriter.
-		            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-		            bufferedWriter.write(json);
-
-		            bufferedWriter.flush();
-		            // Always close files.
-		            bufferedWriter.close();
-		        }
-		        catch (IOException ex)
-		        {
-		            getLogger().error("Could not save JSON file!");
-		        }
-			}
-			else if (thisShop != null)
-			{
-				event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
-				event.setCancelled(true);
-			}
-			else
-			{
-				AdminShop thisBuyShop = null;
-				for (AdminShop shop : buyAdminShops)
-				{
-					if (shop.getSignLocation().getX() == event.getLocation().getX() && shop.getSignLocation().getY() == event.getLocation().getY() && shop.getSignLocation().getZ() == event.getLocation().getZ())
+					if (shop.getSignLocation().getX() == event.getSourceTransform().getLocation().getX() && shop.getSignLocation().getY() == event.getSourceTransform().getLocation().getY() && shop.getSignLocation().getZ() == event.getSourceTransform().getLocation().getZ())
 					{
-						thisBuyShop = shop;
+						thisShop = shop;
 					}
 				}
 
-				if (thisBuyShop != null && event.getEntity().hasPermission("adminshop.remove"))
+				if (thisShop != null && event.getSourceEntity().hasPermission("adminshop.remove"))
 				{
-					event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
-					buyAdminShops.remove(thisBuyShop);
-			        String j = gson.toJson(buyAdminShops);
+					event.getSourceEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
+					adminShops.remove(thisShop);
 
-			        try
-			        {
-			            // Assume default encoding.
-			            FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
+					String json = gson.toJson(adminShops);
+					try
+					{
+						// Assume default encoding.
+						FileWriter fileWriter = new FileWriter("AdminShops.json");
 
-			            // Always wrap FileWriter in BufferedWriter.
-			            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+						// Always wrap FileWriter in BufferedWriter.
+						BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-			            bufferedWriter.write(j);
+						bufferedWriter.write(json);
 
-			            bufferedWriter.flush();
-			            // Always close files.
-			            bufferedWriter.close();
-			        }
-			        catch (IOException ex)
-			        {
-			            getLogger().error("Could not save JSON file!");
-			        }
+						bufferedWriter.flush();
+						// Always close files.
+						bufferedWriter.close();
+					}
+					catch (IOException ex)
+					{
+						getLogger().error("Could not save JSON file!");
+					}
 				}
-				else if (thisBuyShop != null)
+				else if (thisShop != null)
 				{
-					event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
+					event.getSourceEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
 					event.setCancelled(true);
+				}
+				else
+				{
+					AdminShop thisBuyShop = null;
+					for (AdminShop shop : buyAdminShops)
+					{
+						if (shop.getSignLocation().getX() == event.getSourceTransform().getLocation().getX() && shop.getSignLocation().getY() == event.getSourceTransform().getLocation().getY() && shop.getSignLocation().getZ() == event.getSourceTransform().getLocation().getZ())
+						{
+							thisBuyShop = shop;
+						}
+					}
+
+					if (thisBuyShop != null && event.getSourceEntity().hasPermission("adminshop.remove"))
+					{
+						event.getSourceEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
+						buyAdminShops.remove(thisBuyShop);
+						String j = gson.toJson(buyAdminShops);
+
+						try
+						{
+							// Assume default encoding.
+							FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
+
+							// Always wrap FileWriter in BufferedWriter.
+							BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+							bufferedWriter.write(j);
+
+							bufferedWriter.flush();
+							// Always close files.
+							bufferedWriter.close();
+						}
+						catch (IOException ex)
+						{
+							getLogger().error("Could not save JSON file!");
+						}
+					}
+					else if (thisBuyShop != null)
+					{
+						event.getSourceEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
+						event.setCancelled(true);
+					}
 				}
 			}
 		}
 	}
 
 	@Subscribe
-	public void onPlayerInteractBlock(PlayerInteractBlockEvent event)
+	public void onPlayerInteractBlock(InteractBlockEvent.SourcePlayer event)
 	{
-		if (event.getBlock() != null && (event.getBlock().getType() == BlockTypes.WALL_SIGN || event.getBlock().getType() == BlockTypes.STANDING_SIGN))
+		if (event.getTargetBlock().getState().getType() != null && (event.getTargetBlock().getState().getType() == BlockTypes.WALL_SIGN || event.getTargetBlock().getState().getType()  == BlockTypes.STANDING_SIGN))
 		{
 			AdminShop thisShop = null;
 			for (AdminShop chestShop : adminShops)
 			{
-				if (chestShop.getSignLocation().getX() == event.getLocation().getX() && chestShop.getSignLocation().getY() == event.getLocation().getY() && chestShop.getSignLocation().getZ() == event.getLocation().getZ())
+				if (chestShop.getSignLocation().getX() == event.getTargetLocation().getX() && chestShop.getSignLocation().getY() == event.getTargetLocation().getY() && chestShop.getSignLocation().getZ() == event.getTargetLocation().getZ())
 				{
 					thisShop = chestShop;
 				}
@@ -414,7 +411,7 @@ public class Main
 				ShopItem item = null;
 				for (ShopItem i : items)
 				{
-					if (i.getPlayer().getUniqueId() == event.getEntity().getUniqueId())
+					if (i.getPlayer().getUniqueId() == event.getSourceEntity().getUniqueId())
 					{
 						item = i;
 						break;
@@ -429,26 +426,26 @@ public class Main
 					items.remove(item);
 					String json = gson.toJson(adminShops);
 
-			        try
-			        {
-			            // Assume default encoding.
-			            FileWriter fileWriter = new FileWriter("AdminShops.json");
+					try
+					{
+						// Assume default encoding.
+						FileWriter fileWriter = new FileWriter("AdminShops.json");
 
-			            // Always wrap FileWriter in BufferedWriter.
-			            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+						// Always wrap FileWriter in BufferedWriter.
+						BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-			            bufferedWriter.write(json);
+						bufferedWriter.write(json);
 
-			            bufferedWriter.flush();
-			            // Always close files.
-			            bufferedWriter.close();
-			        }
-			        catch (IOException ex)
-			        {
-			            getLogger().error("Could not save JSON file!");
-			        }
-			        
-					event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
+						bufferedWriter.flush();
+						// Always close files.
+						bufferedWriter.close();
+					}
+					catch (IOException ex)
+					{
+						getLogger().error("Could not save JSON file!");
+					}
+
+					event.getSourceEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
 				}
 				else
 				{
@@ -456,7 +453,7 @@ public class Main
 					double price = thisShop.getPrice();
 					String itemName = thisShop.getItemName();
 
-					Player player = event.getEntity();
+					Player player = event.getSourceEntity();
 					TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance();
 					AccountManager accountManager = totalEconomy.getAccountManager();
 					BigDecimal amount = new BigDecimal(price);
@@ -478,7 +475,7 @@ public class Main
 				AdminShop thisBuyShop = null;
 				for (AdminShop chestShop : buyAdminShops)
 				{
-					if (chestShop.getSignLocation().getX() == event.getLocation().getX() && chestShop.getSignLocation().getY() == event.getLocation().getY() && chestShop.getSignLocation().getZ() == event.getLocation().getZ())
+					if (chestShop.getSignLocation().getX() == event.getTargetLocation().getX() && chestShop.getSignLocation().getY() == event.getTargetLocation().getY() && chestShop.getSignLocation().getZ() == event.getTargetLocation().getZ())
 					{
 						thisBuyShop = chestShop;
 					}
@@ -489,7 +486,7 @@ public class Main
 					ShopItem item = null;
 					for (ShopItem i : items)
 					{
-						if (i.getPlayer().getUniqueId() == event.getEntity().getUniqueId())
+						if (i.getPlayer().getUniqueId() == event.getSourceEntity().getUniqueId())
 						{
 							item = i;
 							break;
@@ -502,28 +499,28 @@ public class Main
 						thisBuyShop.setItemName(item.getItemID());
 						buyAdminShops.add(thisBuyShop);
 						items.remove(item);
-				        String j = gson.toJson(buyAdminShops);
-				        
-				        try
-				        {
-				            // Assume default encoding.
-				            FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
+						String j = gson.toJson(buyAdminShops);
 
-				            // Always wrap FileWriter in BufferedWriter.
-				            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+						try
+						{
+							// Assume default encoding.
+							FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
 
-				            bufferedWriter.write(j);
+							// Always wrap FileWriter in BufferedWriter.
+							BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-				            bufferedWriter.flush();
-				            // Always close files.
-				            bufferedWriter.close();
-				        }
-				        catch (IOException ex)
-				        {
-				            getLogger().error("Could not save JSON file!");
-				        }
-						
-						event.getEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
+							bufferedWriter.write(j);
+
+							bufferedWriter.flush();
+							// Always close files.
+							bufferedWriter.close();
+						}
+						catch (IOException ex)
+						{
+							getLogger().error("Could not save JSON file!");
+						}
+
+						event.getSourceEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
 					}
 					else
 					{
@@ -531,7 +528,7 @@ public class Main
 						double price = thisBuyShop.getPrice();
 						String itemName = thisBuyShop.getItemName();
 
-						Player player = event.getEntity();
+						Player player = event.getSourceEntity();
 						TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance();
 						AccountManager accountManager = totalEconomy.getAccountManager();
 						BigDecimal amount = new BigDecimal(price);

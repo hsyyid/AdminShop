@@ -3,7 +3,7 @@ package io.github.hsyyid.adminshop.cmdexecutors;
 import io.github.hsyyid.adminshop.Main;
 import io.github.hsyyid.adminshop.utils.ShopItem;
 
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.CommandException;
