@@ -29,6 +29,7 @@ import org.spongepowered.api.block.tileentity.Sign;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.manipulator.mutable.tileentity.SignData;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.BreakBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
@@ -46,7 +47,6 @@ import org.spongepowered.api.world.World;
 
 import com.erigitic.config.AccountManager;
 import com.erigitic.main.TotalEconomy;
-import com.google.common.eventbus.Subscribe;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
@@ -79,7 +79,7 @@ public class Main
 	@DefaultConfig(sharedRoot = true)
 	private ConfigurationLoader<CommentedConfigurationNode> confManager;
 
-	@Subscribe
+	@Listener
 	public void onServerStart(GameStartedServerEvent event)
 	{
 		getLogger().info("AdminShop loading...");
@@ -167,7 +167,7 @@ public class Main
 		return new String(encoded, encoding);
 	}
 
-	@Subscribe
+	@Listener
 	public void onServerStopping(GameStoppingServerEvent event)
 	{
 		String json = gson.toJson(adminShops);
@@ -211,7 +211,7 @@ public class Main
 		}
 	}
 
-	@Subscribe
+	@Listener
 	public void onSignChange(ChangeSignEvent.SourcePlayer event)
 	{
 		Player player = event.getSourceEntity();
@@ -300,7 +300,7 @@ public class Main
 		}
 	}
 
-	@Subscribe
+	@Listener
 	public void onPlayerBreakBlock(BreakBlockEvent.SourcePlayer event)
 	{
 		for(BlockTransaction transaction : event.getTransactions())
@@ -392,7 +392,7 @@ public class Main
 		}
 	}
 
-	@Subscribe
+	@Listener
 	public void onPlayerInteractBlock(InteractBlockEvent.SourcePlayer event)
 	{
 		if (event.getTargetBlock().getState().getType() != null && (event.getTargetBlock().getState().getType() == BlockTypes.WALL_SIGN || event.getTargetBlock().getState().getType()  == BlockTypes.STANDING_SIGN))
