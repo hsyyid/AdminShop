@@ -310,7 +310,7 @@ public class Main
 				AdminShop thisShop = null;
 				for (AdminShop shop : adminShops)
 				{
-					if (shop.getSignLocation().getX() == event.getSourceTransform().getLocation().getX() && shop.getSignLocation().getY() == event.getSourceTransform().getLocation().getY() && shop.getSignLocation().getZ() == event.getSourceTransform().getLocation().getZ())
+					if (shop.getSignLocation().getX() == transaction.getFinalReplacement().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getFinalReplacement().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getFinalReplacement().getLocation().get().getZ())
 					{
 						thisShop = shop;
 					}
@@ -351,7 +351,7 @@ public class Main
 					AdminShop thisBuyShop = null;
 					for (AdminShop shop : buyAdminShops)
 					{
-						if (shop.getSignLocation().getX() == event.getSourceTransform().getLocation().getX() && shop.getSignLocation().getY() == event.getSourceTransform().getLocation().getY() && shop.getSignLocation().getZ() == event.getSourceTransform().getLocation().getZ())
+						if (shop.getSignLocation().getX() == transaction.getFinalReplacement().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getFinalReplacement().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getFinalReplacement().getLocation().get().getZ())
 						{
 							thisBuyShop = shop;
 						}
