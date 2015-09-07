@@ -51,7 +51,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 
-@Plugin(id = "AdminShop", name = "AdminShop", version = "0.3", dependencies = "required-after:TotalEconomy")
+@Plugin(id = "AdminShop", name = "AdminShop", version = "0.4", dependencies = "required-after:TotalEconomy")
 public class Main
 {
 	public static Game game = null;
@@ -82,7 +82,7 @@ public class Main
 	@Listener
 	public void onServerStart(GameStartedServerEvent event)
 	{
-		getLogger().info("AdminShop loading...");
+		getLogger().info("AdminShop loading..");
 
 		game = event.getGame();
 		helper = game.getTeleportHelper();
@@ -212,116 +212,30 @@ public class Main
 	}
 
 	@Listener
-	public void onSignChange(ChangeSignEvent.SourcePlayer event)
+	public void onSignChange(ChangeSignEvent event)
 	{
-		Player player = event.getSourceEntity();
-		Sign sign = event.getTargetTile();
-		Location<World> signLocation = sign.getLocation();
-		SignData signData = event.getText();
-		String line0 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(0));
-		String line1 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(1));
-		String line2 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(2));
-		String line3 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(3));
-
-		if (line0.equals("[AdminShop]"))
+		if(event.getCause().root().isPresent() && event.getCause().root().get() instanceof Player)
 		{
-			if (player != null && player.hasPermission("adminshop.create"))
+			Player player = (Player) event.getCause().root().get();
+			Sign sign = event.getTargetTile();
+			Location<World> signLocation = sign.getLocation();
+			SignData signData = event.getText();
+			String line0 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(0));
+			String line1 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(1));
+			String line2 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(2));
+			String line3 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(3));
+
+			if (line0.equals("[AdminShop]"))
 			{
-				int itemAmount = Integer.parseInt(line1);
-				double price = Double.parseDouble(line2);
-				String itemName = line3;
-				AdminShop shop = new AdminShop(itemAmount, price, itemName, signLocation);
-				adminShops.add(shop);				
-				String json = gson.toJson(adminShops);
-
-				try
+				if (player != null && player.hasPermission("adminshop.create"))
 				{
-					// Assume default encoding.
-					FileWriter fileWriter = new FileWriter("AdminShops.json");
-
-					// Always wrap FileWriter in BufferedWriter.
-					BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-					bufferedWriter.write(json);
-
-					bufferedWriter.flush();
-					// Always close files.
-					bufferedWriter.close();
-				}
-				catch (IOException ex)
-				{
-					getLogger().error("Could not save JSON file!");
-				}
-
-				signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Texts.of(TextColors.DARK_BLUE, "[AdminShop]")));
-				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
-			}
-			else if (player != null)
-			{
-				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
-			}
-		}
-		else if (line0.equals("[AdminShopSell]"))
-		{
-			if (player != null && player.hasPermission("adminshop.create"))
-			{
-				int itemAmount = Integer.parseInt(line1);
-				double price = Double.parseDouble(line2);
-				String itemName = line3;
-				AdminShop shop = new AdminShop(itemAmount, price, itemName, signLocation);
-				buyAdminShops.add(shop);
-				String j = gson.toJson(buyAdminShops);
-
-				try
-				{
-					// Assume default encoding.
-					FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
-
-					// Always wrap FileWriter in BufferedWriter.
-					BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-					bufferedWriter.write(j);
-
-					bufferedWriter.flush();
-					// Always close files.
-					bufferedWriter.close();
-				}
-				catch (IOException ex)
-				{
-					getLogger().error("Could not save JSON file!");
-				}
-				signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Texts.of(TextColors.DARK_BLUE, "[AdminShopSell]")));
-				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
-			}
-			else if (player != null)
-			{
-				player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
-			}
-		}
-	}
-
-	@Listener
-	public void onPlayerBreakBlock(BreakBlockEvent.SourcePlayer event)
-	{
-		for(BlockTransaction transaction : event.getTransactions())
-		{
-			if (transaction.getFinalReplacement().getState() != null && (transaction.getFinalReplacement().getState().getType() == BlockTypes.WALL_SIGN || transaction.getFinalReplacement().getState().getType() == BlockTypes.STANDING_SIGN))
-			{
-				AdminShop thisShop = null;
-				for (AdminShop shop : adminShops)
-				{
-					if (shop.getSignLocation().getX() == transaction.getFinalReplacement().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getFinalReplacement().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getFinalReplacement().getLocation().get().getZ())
-					{
-						thisShop = shop;
-					}
-				}
-
-				if (thisShop != null && event.getSourceEntity().hasPermission("adminshop.remove"))
-				{
-					event.getSourceEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
-					adminShops.remove(thisShop);
-
+					int itemAmount = Integer.parseInt(line1);
+					double price = Double.parseDouble(line2);
+					String itemName = line3;
+					AdminShop shop = new AdminShop(itemAmount, price, itemName, signLocation);
+					adminShops.add(shop);				
 					String json = gson.toJson(adminShops);
+
 					try
 					{
 						// Assume default encoding.
@@ -340,38 +254,89 @@ public class Main
 					{
 						getLogger().error("Could not save JSON file!");
 					}
+
+					signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Texts.of(TextColors.DARK_BLUE, "[AdminShop]")));
+					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
 				}
-				else if (thisShop != null)
+				else if (player != null)
 				{
-					event.getSourceEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
-					event.setCancelled(true);
+					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
 				}
-				else
+			}
+			else if (line0.equals("[AdminShopSell]"))
+			{
+				if (player != null && player.hasPermission("adminshop.create"))
 				{
-					AdminShop thisBuyShop = null;
-					for (AdminShop shop : buyAdminShops)
+					int itemAmount = Integer.parseInt(line1);
+					double price = Double.parseDouble(line2);
+					String itemName = line3;
+					AdminShop shop = new AdminShop(itemAmount, price, itemName, signLocation);
+					buyAdminShops.add(shop);
+					String j = gson.toJson(buyAdminShops);
+
+					try
+					{
+						// Assume default encoding.
+						FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
+
+						// Always wrap FileWriter in BufferedWriter.
+						BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+						bufferedWriter.write(j);
+
+						bufferedWriter.flush();
+						// Always close files.
+						bufferedWriter.close();
+					}
+					catch (IOException ex)
+					{
+						getLogger().error("Could not save JSON file!");
+					}
+					signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Texts.of(TextColors.DARK_BLUE, "[AdminShopSell]")));
+					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
+				}
+				else if (player != null)
+				{
+					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
+				}
+			}
+		}
+	}
+
+	@Listener
+	public void onPlayerBreakBlock(BreakBlockEvent event)
+	{
+		if(event.getCause().root().isPresent() && event.getCause().root().get() instanceof Player)
+		{
+			Player player = (Player) event.getCause().root().get();
+			for(BlockTransaction transaction : event.getTransactions())
+			{
+				if (transaction.getFinalReplacement().getState() != null && (transaction.getFinalReplacement().getState().getType() == BlockTypes.WALL_SIGN || transaction.getFinalReplacement().getState().getType() == BlockTypes.STANDING_SIGN))
+				{
+					AdminShop thisShop = null;
+					for (AdminShop shop : adminShops)
 					{
 						if (shop.getSignLocation().getX() == transaction.getFinalReplacement().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getFinalReplacement().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getFinalReplacement().getLocation().get().getZ())
 						{
-							thisBuyShop = shop;
+							thisShop = shop;
 						}
 					}
 
-					if (thisBuyShop != null && event.getSourceEntity().hasPermission("adminshop.remove"))
+					if (thisShop != null && player.hasPermission("adminshop.remove"))
 					{
-						event.getSourceEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
-						buyAdminShops.remove(thisBuyShop);
-						String j = gson.toJson(buyAdminShops);
+						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
+						adminShops.remove(thisShop);
 
+						String json = gson.toJson(adminShops);
 						try
 						{
 							// Assume default encoding.
-							FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
+							FileWriter fileWriter = new FileWriter("AdminShops.json");
 
 							// Always wrap FileWriter in BufferedWriter.
 							BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-							bufferedWriter.write(j);
+							bufferedWriter.write(json);
 
 							bufferedWriter.flush();
 							// Always close files.
@@ -382,10 +347,52 @@ public class Main
 							getLogger().error("Could not save JSON file!");
 						}
 					}
-					else if (thisBuyShop != null)
+					else if (thisShop != null)
 					{
-						event.getSourceEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
+						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
 						event.setCancelled(true);
+					}
+					else
+					{
+						AdminShop thisBuyShop = null;
+						for (AdminShop shop : buyAdminShops)
+						{
+							if (shop.getSignLocation().getX() == transaction.getFinalReplacement().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getFinalReplacement().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getFinalReplacement().getLocation().get().getZ())
+							{
+								thisBuyShop = shop;
+							}
+						}
+
+						if (thisBuyShop != null && player.hasPermission("adminshop.remove"))
+						{
+							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
+							buyAdminShops.remove(thisBuyShop);
+							String j = gson.toJson(buyAdminShops);
+
+							try
+							{
+								// Assume default encoding.
+								FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
+
+								// Always wrap FileWriter in BufferedWriter.
+								BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+								bufferedWriter.write(j);
+
+								bufferedWriter.flush();
+								// Always close files.
+								bufferedWriter.close();
+							}
+							catch (IOException ex)
+							{
+								getLogger().error("Could not save JSON file!");
+							}
+						}
+						else if (thisBuyShop != null)
+						{
+							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
+							event.setCancelled(true);
+						}
 					}
 				}
 			}
@@ -393,100 +400,29 @@ public class Main
 	}
 
 	@Listener
-	public void onPlayerInteractBlock(InteractBlockEvent.SourcePlayer event)
+	public void onPlayerInteractBlock(InteractBlockEvent event)
 	{
-		if (event.getTargetBlock().getState().getType() != null && (event.getTargetBlock().getState().getType() == BlockTypes.WALL_SIGN || event.getTargetBlock().getState().getType()  == BlockTypes.STANDING_SIGN))
+		if(event.getCause().root().isPresent() && event.getCause().root().get() instanceof Player)
 		{
-			AdminShop thisShop = null;
-			for (AdminShop chestShop : adminShops)
+			Player player = (Player) event.getCause().root().get();
+			
+			if (event.getTargetBlock().getState().getType() != null && (event.getTargetBlock().getState().getType() == BlockTypes.WALL_SIGN || event.getTargetBlock().getState().getType()  == BlockTypes.STANDING_SIGN))
 			{
-				if (chestShop.getSignLocation().getX() == event.getTargetLocation().getX() && chestShop.getSignLocation().getY() == event.getTargetLocation().getY() && chestShop.getSignLocation().getZ() == event.getTargetLocation().getZ())
+				AdminShop thisShop = null;
+				for (AdminShop chestShop : adminShops)
 				{
-					thisShop = chestShop;
-				}
-			}
-
-			if (thisShop != null)
-			{
-				ShopItem item = null;
-				for (ShopItem i : items)
-				{
-					if (i.getPlayer().getUniqueId() == event.getSourceEntity().getUniqueId())
+					if (chestShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && chestShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && chestShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
 					{
-						item = i;
-						break;
+						thisShop = chestShop;
 					}
 				}
 
-				if (item != null)
-				{
-					adminShops.remove(thisShop);
-					thisShop.setItemName(item.getItemID());
-					adminShops.add(thisShop);
-					items.remove(item);
-					String json = gson.toJson(adminShops);
-
-					try
-					{
-						// Assume default encoding.
-						FileWriter fileWriter = new FileWriter("AdminShops.json");
-
-						// Always wrap FileWriter in BufferedWriter.
-						BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-						bufferedWriter.write(json);
-
-						bufferedWriter.flush();
-						// Always close files.
-						bufferedWriter.close();
-					}
-					catch (IOException ex)
-					{
-						getLogger().error("Could not save JSON file!");
-					}
-
-					event.getSourceEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
-				}
-				else
-				{
-					int itemAmount = thisShop.getItemAmount();
-					double price = thisShop.getPrice();
-					String itemName = thisShop.getItemName();
-
-					Player player = event.getSourceEntity();
-					TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance();
-					AccountManager accountManager = totalEconomy.getAccountManager();
-					BigDecimal amount = new BigDecimal(price);
-
-					if (accountManager.getBalance(player.getUniqueId()).intValue() > amount.intValue())
-					{
-						accountManager.removeFromBalance(player.getUniqueId(), amount);
-						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
-						game.getCommandDispatcher().process(game.getServer().getConsole(), "give" + " " + player.getName() + " " + itemName + " " + itemAmount);
-					}
-					else
-					{
-						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You don't have enough money to do that!"));
-					}
-				}
-			}
-			else
-			{
-				AdminShop thisBuyShop = null;
-				for (AdminShop chestShop : buyAdminShops)
-				{
-					if (chestShop.getSignLocation().getX() == event.getTargetLocation().getX() && chestShop.getSignLocation().getY() == event.getTargetLocation().getY() && chestShop.getSignLocation().getZ() == event.getTargetLocation().getZ())
-					{
-						thisBuyShop = chestShop;
-					}
-				}
-
-				if (thisBuyShop != null)
+				if (thisShop != null)
 				{
 					ShopItem item = null;
 					for (ShopItem i : items)
 					{
-						if (i.getPlayer().getUniqueId() == event.getSourceEntity().getUniqueId())
+						if (i.getPlayer().getUniqueId() == player.getUniqueId())
 						{
 							item = i;
 							break;
@@ -495,21 +431,21 @@ public class Main
 
 					if (item != null)
 					{
-						buyAdminShops.remove(thisBuyShop);
-						thisBuyShop.setItemName(item.getItemID());
-						buyAdminShops.add(thisBuyShop);
+						adminShops.remove(thisShop);
+						thisShop.setItemName(item.getItemID());
+						adminShops.add(thisShop);
 						items.remove(item);
-						String j = gson.toJson(buyAdminShops);
+						String json = gson.toJson(adminShops);
 
 						try
 						{
 							// Assume default encoding.
-							FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
+							FileWriter fileWriter = new FileWriter("AdminShops.json");
 
 							// Always wrap FileWriter in BufferedWriter.
 							BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-							bufferedWriter.write(j);
+							bufferedWriter.write(json);
 
 							bufferedWriter.flush();
 							// Always close files.
@@ -520,37 +456,111 @@ public class Main
 							getLogger().error("Could not save JSON file!");
 						}
 
-						event.getSourceEntity().sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
+						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
 					}
 					else
 					{
-						int itemAmount = thisBuyShop.getItemAmount();
-						double price = thisBuyShop.getPrice();
-						String itemName = thisBuyShop.getItemName();
+						int itemAmount = thisShop.getItemAmount();
+						double price = thisShop.getPrice();
+						String itemName = thisShop.getItemName();
 
-						Player player = event.getSourceEntity();
 						TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance();
 						AccountManager accountManager = totalEconomy.getAccountManager();
 						BigDecimal amount = new BigDecimal(price);
-						int quantityInHand = 0;
 
-						if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
+						if (accountManager.getBalance(player.getUniqueId()).intValue() > amount.intValue())
 						{
-							player.setItemInHand(null);
-							accountManager.addToBalance(player.getUniqueId(), amount, true);
-							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
-						}
-						else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
-						{
-							quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
-							player.setItemInHand(null);
-							game.getCommandDispatcher().process(game.getServer().getConsole(), "give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
-							accountManager.addToBalance(player.getUniqueId(), amount, true);
-							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+							accountManager.removeFromBalance(player.getUniqueId(), amount);
+							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
+							game.getCommandDispatcher().process(game.getServer().getConsole(), "give" + " " + player.getName() + " " + itemName + " " + itemAmount);
 						}
 						else
 						{
-							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
+							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You don't have enough money to do that!"));
+						}
+					}
+				}
+				else
+				{
+					AdminShop thisBuyShop = null;
+					for (AdminShop chestShop : buyAdminShops)
+					{
+						if (chestShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && chestShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && chestShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
+						{
+							thisBuyShop = chestShop;
+						}
+					}
+
+					if (thisBuyShop != null)
+					{
+						ShopItem item = null;
+						for (ShopItem i : items)
+						{
+							if (i.getPlayer().getUniqueId() == player.getUniqueId())
+							{
+								item = i;
+								break;
+							}
+						}
+
+						if (item != null)
+						{
+							buyAdminShops.remove(thisBuyShop);
+							thisBuyShop.setItemName(item.getItemID());
+							buyAdminShops.add(thisBuyShop);
+							items.remove(item);
+							String j = gson.toJson(buyAdminShops);
+
+							try
+							{
+								// Assume default encoding.
+								FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
+
+								// Always wrap FileWriter in BufferedWriter.
+								BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+								bufferedWriter.write(j);
+
+								bufferedWriter.flush();
+								// Always close files.
+								bufferedWriter.close();
+							}
+							catch (IOException ex)
+							{
+								getLogger().error("Could not save JSON file!");
+							}
+
+							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
+						}
+						else
+						{
+							int itemAmount = thisBuyShop.getItemAmount();
+							double price = thisBuyShop.getPrice();
+							String itemName = thisBuyShop.getItemName();
+							
+							TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance();
+							AccountManager accountManager = totalEconomy.getAccountManager();
+							BigDecimal amount = new BigDecimal(price);
+							int quantityInHand = 0;
+
+							if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
+							{
+								player.setItemInHand(null);
+								accountManager.addToBalance(player.getUniqueId(), amount, true);
+								player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+							}
+							else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
+							{
+								quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
+								player.setItemInHand(null);
+								game.getCommandDispatcher().process(game.getServer().getConsole(), "give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
+								accountManager.addToBalance(player.getUniqueId(), amount, true);
+								player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+							}
+							else
+							{
+								player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
+							}
 						}
 					}
 				}
