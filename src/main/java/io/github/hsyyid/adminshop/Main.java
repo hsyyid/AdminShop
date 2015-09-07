@@ -214,9 +214,9 @@ public class Main
 	@Listener
 	public void onSignChange(ChangeSignEvent event)
 	{
-		if(event.getCause().root().isPresent() && event.getCause().root().get() instanceof Player)
+		if(event.getCause().first(Player.class).isPresent())
 		{
-			Player player = (Player) event.getCause().root().get();
+			Player player = (Player) event.getCause().first(Player.class).get();
 			Sign sign = event.getTargetTile();
 			Location<World> signLocation = sign.getLocation();
 			SignData signData = event.getText();
@@ -306,9 +306,9 @@ public class Main
 	@Listener
 	public void onPlayerBreakBlock(BreakBlockEvent event)
 	{
-		if(event.getCause().root().isPresent() && event.getCause().root().get() instanceof Player)
+		if(event.getCause().first(Player.class).isPresent())
 		{
-			Player player = (Player) event.getCause().root().get();
+			Player player = (Player) event.getCause().first(Player.class).get();
 			for(BlockTransaction transaction : event.getTransactions())
 			{
 				if (transaction.getFinalReplacement().getState() != null && (transaction.getFinalReplacement().getState().getType() == BlockTypes.WALL_SIGN || transaction.getFinalReplacement().getState().getType() == BlockTypes.STANDING_SIGN))
@@ -402,9 +402,9 @@ public class Main
 	@Listener
 	public void onPlayerInteractBlock(InteractBlockEvent event)
 	{
-		if(event.getCause().root().isPresent() && event.getCause().root().get() instanceof Player)
+		if(event.getCause().first(Player.class).isPresent())
 		{
-			Player player = (Player) event.getCause().root().get();
+			Player player = (Player) event.getCause().first(Player.class).get();
 			
 			if (event.getTargetBlock().getState().getType() != null && (event.getTargetBlock().getState().getType() == BlockTypes.WALL_SIGN || event.getTargetBlock().getState().getType()  == BlockTypes.STANDING_SIGN))
 			{
