@@ -3,7 +3,10 @@ apply plugin: 'eclipse'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
-version = '0.2'
+version = '0.4'
+group = "io.github.hsyyid"
+archivesBaseName = "AdminShop"
+
 jar {
     manifest {
         attributes 'Implementation-Title': 'AdminShop',
