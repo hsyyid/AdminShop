@@ -106,11 +106,11 @@ public class Main
 		}
 
 		CommandSpec setItemShopCommandSpec = CommandSpec.builder()
-				.description(Texts.of("Sets Item for a AdminShop"))
-				.permission("adminshop.setitem")
-				.arguments(GenericArguments.onlyOne(GenericArguments.string(Texts.of("item ID"))))
-				.executor(new SetItemShopExecutor())
-				.build();
+			.description(Texts.of("Sets Item for a AdminShop"))
+			.permission("adminshop.setitem")
+			.arguments(GenericArguments.onlyOne(GenericArguments.string(Texts.of("item ID"))))
+			.executor(new SetItemShopExecutor())
+			.build();
 
 		game.getCommandDispatcher().register(this, setItemShopCommandSpec, "setitem");
 
@@ -125,7 +125,7 @@ public class Main
 			getLogger().error("Could not read JSON file!");
 		}
 
-		if(json != null)
+		if (json != null)
 		{
 			adminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
 		}
@@ -133,7 +133,6 @@ public class Main
 		{
 			getLogger().error("Could not read JSON file!");
 		}
-
 
 		try
 		{
@@ -144,7 +143,7 @@ public class Main
 			getLogger().error("Could not read JSON file!");
 		}
 
-		if(json != null)
+		if (json != null)
 		{
 			buyAdminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
 		}
@@ -214,7 +213,7 @@ public class Main
 	@Listener
 	public void onSignChange(ChangeSignEvent event)
 	{
-		if(event.getCause().first(Player.class).isPresent())
+		if (event.getCause().first(Player.class).isPresent())
 		{
 			Player player = (Player) event.getCause().first(Player.class).get();
 			Sign sign = event.getTargetTile();
@@ -233,7 +232,7 @@ public class Main
 					double price = Double.parseDouble(line2);
 					String itemName = line3;
 					AdminShop shop = new AdminShop(itemAmount, price, itemName, signLocation);
-					adminShops.add(shop);				
+					adminShops.add(shop);
 					String json = gson.toJson(adminShops);
 
 					try
@@ -306,17 +305,19 @@ public class Main
 	@Listener
 	public void onPlayerBreakBlock(BreakBlockEvent event)
 	{
-		if(event.getCause().first(Player.class).isPresent())
+		if (event.getCause().first(Player.class).isPresent())
 		{
 			Player player = (Player) event.getCause().first(Player.class).get();
-			for(BlockTransaction transaction : event.getTransactions())
+
+			for (BlockTransaction transaction : event.getTransactions())
 			{
-				if (transaction.getFinalReplacement().getState() != null && (transaction.getFinalReplacement().getState().getType() == BlockTypes.WALL_SIGN || transaction.getFinalReplacement().getState().getType() == BlockTypes.STANDING_SIGN))
+				getLogger().info("In for loop.");
+				if (transaction.getOriginal().getState() != null && (transaction.getOriginal().getState().getType() == BlockTypes.WALL_SIGN || transaction.getOriginal().getState().getType() == BlockTypes.STANDING_SIGN))
 				{
 					AdminShop thisShop = null;
 					for (AdminShop shop : adminShops)
 					{
-						if (shop.getSignLocation().getX() == transaction.getFinalReplacement().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getFinalReplacement().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getFinalReplacement().getLocation().get().getZ())
+						if (shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
 						{
 							thisShop = shop;
 						}
@@ -357,7 +358,7 @@ public class Main
 						AdminShop thisBuyShop = null;
 						for (AdminShop shop : buyAdminShops)
 						{
-							if (shop.getSignLocation().getX() == transaction.getFinalReplacement().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getFinalReplacement().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getFinalReplacement().getLocation().get().getZ())
+							if (shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
 							{
 								thisBuyShop = shop;
 							}
@@ -402,11 +403,11 @@ public class Main
 	@Listener
 	public void onPlayerInteractBlock(InteractBlockEvent event)
 	{
-		if(event.getCause().first(Player.class).isPresent())
+		if (event.getCause().first(Player.class).isPresent())
 		{
 			Player player = (Player) event.getCause().first(Player.class).get();
-			
-			if (event.getTargetBlock().getState().getType() != null && (event.getTargetBlock().getState().getType() == BlockTypes.WALL_SIGN || event.getTargetBlock().getState().getType()  == BlockTypes.STANDING_SIGN))
+
+			if (event.getTargetBlock().getState().getType() != null && (event.getTargetBlock().getState().getType() == BlockTypes.WALL_SIGN || event.getTargetBlock().getState().getType() == BlockTypes.STANDING_SIGN))
 			{
 				AdminShop thisShop = null;
 				for (AdminShop chestShop : adminShops)
@@ -511,19 +512,15 @@ public class Main
 							items.remove(item);
 							String j = gson.toJson(buyAdminShops);
 
+							// Assume default encoding.
 							try
 							{
-								// Assume default encoding.
 								FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
-
-								// Always wrap FileWriter in BufferedWriter.
 								BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
 								bufferedWriter.write(j);
-
 								bufferedWriter.flush();
-								// Always close files.
 								bufferedWriter.close();
+								fileWriter.close();
 							}
 							catch (IOException ex)
 							{
@@ -537,7 +534,7 @@ public class Main
 							int itemAmount = thisBuyShop.getItemAmount();
 							double price = thisBuyShop.getPrice();
 							String itemName = thisBuyShop.getItemName();
-							
+
 							TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance();
 							AccountManager accountManager = totalEconomy.getAccountManager();
 							BigDecimal amount = new BigDecimal(price);
