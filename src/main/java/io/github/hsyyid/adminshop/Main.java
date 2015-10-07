@@ -311,7 +311,6 @@ public class Main
 
 			for (BlockTransaction transaction : event.getTransactions())
 			{
-				getLogger().info("In for loop.");
 				if (transaction.getOriginal().getState() != null && (transaction.getOriginal().getState().getType() == BlockTypes.WALL_SIGN || transaction.getOriginal().getState().getType() == BlockTypes.STANDING_SIGN))
 				{
 					AdminShop thisShop = null;
