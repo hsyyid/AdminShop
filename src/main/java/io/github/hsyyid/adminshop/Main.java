@@ -1,26 +1,17 @@
 package io.github.hsyyid.adminshop;
 
+import com.erigitic.config.AccountManager;
+import com.erigitic.main.TotalEconomy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.inject.Inject;
 import io.github.hsyyid.adminshop.cmdexecutors.SetItemShopExecutor;
 import io.github.hsyyid.adminshop.utils.AdminShop;
 import io.github.hsyyid.adminshop.utils.LocationAdapter;
 import io.github.hsyyid.adminshop.utils.ShopItem;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
-
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.block.BlockTransaction;
@@ -45,13 +36,19 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.TeleportHelper;
 import org.spongepowered.api.world.World;
 
-import com.erigitic.config.AccountManager;
-import com.erigitic.main.TotalEconomy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.inject.Inject;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 
-@Plugin(id = "AdminShop", name = "AdminShop", version = "0.4", dependencies = "required-after:TotalEconomy")
+@Plugin(id = "AdminShop", name = "AdminShop", version = "0.6", dependencies = "required-after:TotalEconomy")
 public class Main
 {
 	public static Game game = null;
@@ -409,9 +406,11 @@ public class Main
 			if (event.getTargetBlock().getState().getType() != null && (event.getTargetBlock().getState().getType() == BlockTypes.WALL_SIGN || event.getTargetBlock().getState().getType() == BlockTypes.STANDING_SIGN))
 			{
 				AdminShop thisShop = null;
+				
 				for (AdminShop chestShop : adminShops)
 				{
-					if (chestShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && chestShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && chestShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
+					if (chestShop.getSignLocation()!= null &&
+					       chestShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && chestShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && chestShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
 					{
 						thisShop = chestShop;
 					}
