@@ -21,7 +21,7 @@ import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.manipulator.mutable.tileentity.SignData;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.block.BreakBlockEvent;
+import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
@@ -300,7 +300,7 @@ public class Main
 	}
 
 	@Listener
-	public void onPlayerBreakBlock(BreakBlockEvent event)
+	public void onPlayerBreakBlock(ChangeBlockEvent.Break event)
 	{
 		if (event.getCause().first(Player.class).isPresent())
 		{
