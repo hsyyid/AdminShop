@@ -471,7 +471,7 @@ public class Main
 						{
 							accountManager.removeFromBalance(player.getUniqueId(), amount);
 							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
-							game.getCommandDispatcher().process(game.getServer().getConsole(), "give" + " " + player.getName() + " " + itemName + " " + itemAmount);
+							game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount);
 						}
 						else
 						{
@@ -548,7 +548,7 @@ public class Main
 							{
 								quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
 								player.setItemInHand(null);
-								game.getCommandDispatcher().process(game.getServer().getConsole(), "give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
+								game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
 								accountManager.addToBalance(player.getUniqueId(), amount, true);
 								player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 							}
