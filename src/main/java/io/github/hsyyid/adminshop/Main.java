@@ -407,12 +407,12 @@ public class Main
 			{
 				AdminShop thisShop = null;
 				
-				for (AdminShop chestShop : adminShops)
+				for (AdminShop adminShop : adminShops)
 				{
-					if (chestShop.getSignLocation()!= null &&
-					       chestShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && chestShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && chestShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
+					if (adminShop.getSignLocation()!= null &&
+					       adminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && adminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && adminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
 					{
-						thisShop = chestShop;
+						thisShop = adminShop;
 					}
 				}
 
@@ -482,11 +482,13 @@ public class Main
 				else
 				{
 					AdminShop thisBuyShop = null;
-					for (AdminShop chestShop : buyAdminShops)
+					
+					for (AdminShop buyAdminShop : buyAdminShops)
 					{
-						if (chestShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && chestShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && chestShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
+						if (buyAdminShop.getSignLocation()!= null &&
+						       buyAdminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && buyAdminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && buyAdminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
 						{
-							thisBuyShop = chestShop;
+							thisBuyShop = buyAdminShop;
 						}
 					}
 
