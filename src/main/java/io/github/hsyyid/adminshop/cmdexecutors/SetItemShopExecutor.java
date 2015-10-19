@@ -1,6 +1,6 @@
 package io.github.hsyyid.adminshop.cmdexecutors;
 
-import io.github.hsyyid.adminshop.Main;
+import io.github.hsyyid.adminshop.AdminShop;
 import io.github.hsyyid.adminshop.utils.ShopItem;
 
 import org.spongepowered.api.entity.living.player.Player;
@@ -23,7 +23,7 @@ public class SetItemShopExecutor implements CommandExecutor
 		{
 			Player player = (Player) src;
 			ShopItem item = new ShopItem(player, itemID);
-			Main.items.add(item);
+			AdminShop.items.add(item);
 			player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Right click an AdminShop sign!"));
 		}
 		else if (src instanceof ConsoleSource)

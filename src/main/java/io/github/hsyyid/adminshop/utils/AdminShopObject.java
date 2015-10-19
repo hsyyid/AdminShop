@@ -3,14 +3,14 @@ package io.github.hsyyid.adminshop.utils;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-public class AdminShop
+public class AdminShopObject
 {
 	public int itemAmount;
 	public double price;
 	public String itemName;
 	public Location<World> signLocation;
 	
-	public AdminShop(int itemAmount, double price, String itemName, Location<World> signLocation)
+	public AdminShopObject(int itemAmount, double price, String itemName, Location<World> signLocation)
 	{
 		this.itemAmount = itemAmount;
 		this.price = price;

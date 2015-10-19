@@ -1,6 +1,6 @@
 package io.github.hsyyid.adminshop.utils;
 
-import io.github.hsyyid.adminshop.Main;
+import io.github.hsyyid.adminshop.AdminShop;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -68,9 +68,9 @@ public class LocationAdapter extends TypeAdapter<Location<World>>
 
 		in.endObject();
 
-		if (Main.game.getServer().getWorld(UUID.fromString(worldID)).isPresent())
+		if (AdminShop.game.getServer().getWorld(UUID.fromString(worldID)).isPresent())
 		{
-			Location<World> location = new Location<World>(Main.game.getServer().getWorld(UUID.fromString(worldID)).get(), x, y, z);
+			Location<World> location = new Location<World>(AdminShop.game.getServer().getWorld(UUID.fromString(worldID)).get(), x, y, z);
 			return location;
 		}
 		else

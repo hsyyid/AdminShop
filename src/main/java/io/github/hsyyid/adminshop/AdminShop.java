@@ -2,12 +2,10 @@ package io.github.hsyyid.adminshop;
 
 import com.erigitic.config.AccountManager;
 import com.erigitic.main.TotalEconomy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import io.github.hsyyid.adminshop.cmdexecutors.SetItemShopExecutor;
-import io.github.hsyyid.adminshop.utils.AdminShop;
-import io.github.hsyyid.adminshop.utils.LocationAdapter;
+import io.github.hsyyid.adminshop.utils.AdminShopObject;
+import io.github.hsyyid.adminshop.utils.ConfigManager;
 import io.github.hsyyid.adminshop.utils.ShopItem;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
@@ -25,7 +23,7 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
-import org.spongepowered.api.event.game.state.GameStartedServerEvent;
+import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.DefaultConfig;
@@ -37,29 +35,21 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.TeleportHelper;
 import org.spongepowered.api.world.World;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 @Plugin(id = "AdminShop", name = "AdminShop", version = "0.6", dependencies = "required-after:TotalEconomy")
-public class Main
+public class AdminShop
 {
 	public static Game game = null;
 	public static ConfigurationNode config = null;
 	public static ConfigurationLoader<CommentedConfigurationNode> configurationManager;
 	public static TeleportHelper helper;
-	public static ArrayList<AdminShop> adminShops = new ArrayList<AdminShop>();
-	public static ArrayList<AdminShop> buyAdminShops = new ArrayList<AdminShop>();
+	public static ArrayList<AdminShopObject> adminShops = new ArrayList<AdminShopObject>();
+	public static ArrayList<AdminShopObject> buyAdminShops = new ArrayList<AdminShopObject>();
 	public static ArrayList<ShopItem> items = new ArrayList<ShopItem>();
-	private Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(Location.class, new LocationAdapter()).create();
 
 	@Inject
 	private Logger logger;
@@ -78,14 +68,13 @@ public class Main
 	private ConfigurationLoader<CommentedConfigurationNode> confManager;
 
 	@Listener
-	public void onServerStart(GameStartedServerEvent event)
+	public void onServerInit(GameInitializationEvent event)
 	{
 		getLogger().info("AdminShop loading..");
 
 		game = event.getGame();
 		helper = game.getTeleportHelper();
 
-		// Config File
 		try
 		{
 			if (!dConfig.exists())
@@ -112,43 +101,8 @@ public class Main
 
 		game.getCommandDispatcher().register(this, setItemShopCommandSpec, "setitem");
 
-		String json = null;
-
-		try
-		{
-			json = readFile("AdminShops.json", StandardCharsets.UTF_8);
-		}
-		catch (IOException e)
-		{
-			getLogger().error("Could not read JSON file!");
-		}
-
-		if (json != null)
-		{
-			adminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
-		}
-		else
-		{
-			getLogger().error("Could not read JSON file!");
-		}
-
-		try
-		{
-			json = readFile("BuyAdminShops.json", StandardCharsets.UTF_8);
-		}
-		catch (IOException e)
-		{
-			getLogger().error("Could not read JSON file!");
-		}
-
-		if (json != null)
-		{
-			buyAdminShops = new ArrayList<AdminShop>(Arrays.asList(gson.fromJson(json, AdminShop[].class)));
-		}
-		else
-		{
-			getLogger().error("Could not read JSON file!");
-		}
+		ConfigManager.readAdminShops();
+		ConfigManager.readBuyAdminShops();
 
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop was made by HassanS6000!");
@@ -158,54 +112,11 @@ public class Main
 		getLogger().info("AdminShop loaded!");
 	}
 
-	static String readFile(String path, Charset encoding) throws IOException
-	{
-		byte[] encoded = Files.readAllBytes(Paths.get(path));
-		return new String(encoded, encoding);
-	}
-
 	@Listener
 	public void onServerStopping(GameStoppingServerEvent event)
 	{
-		String json = gson.toJson(adminShops);
-		String j = gson.toJson(buyAdminShops);
-		try
-		{
-			// Assume default encoding.
-			FileWriter fileWriter = new FileWriter("AdminShops.json");
-
-			// Always wrap FileWriter in BufferedWriter.
-			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-			bufferedWriter.write(json);
-
-			bufferedWriter.flush();
-			// Always close files.
-			bufferedWriter.close();
-		}
-		catch (IOException ex)
-		{
-			getLogger().error("Could not save JSON file!");
-		}
-
-		try
-		{
-			// Assume default encoding.
-			FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
-
-			// Always wrap FileWriter in BufferedWriter.
-			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-			bufferedWriter.write(j);
-
-			bufferedWriter.flush();
-			// Always close files.
-			bufferedWriter.close();
-		}
-		catch (IOException ex)
-		{
-			getLogger().error("Could not save JSON file!");
-		}
+		ConfigManager.writeAdminShops();
+		ConfigManager.writeBuyAdminShops();
 	}
 
 	@Listener
@@ -229,29 +140,9 @@ public class Main
 					int itemAmount = Integer.parseInt(line1);
 					double price = Double.parseDouble(line2);
 					String itemName = line3;
-					AdminShop shop = new AdminShop(itemAmount, price, itemName, signLocation);
+					AdminShopObject shop = new AdminShopObject(itemAmount, price, itemName, signLocation);
 					adminShops.add(shop);
-					String json = gson.toJson(adminShops);
-
-					try
-					{
-						// Assume default encoding.
-						FileWriter fileWriter = new FileWriter("AdminShops.json");
-
-						// Always wrap FileWriter in BufferedWriter.
-						BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-						bufferedWriter.write(json);
-
-						bufferedWriter.flush();
-						// Always close files.
-						bufferedWriter.close();
-					}
-					catch (IOException ex)
-					{
-						getLogger().error("Could not save JSON file!");
-					}
-
+					ConfigManager.writeAdminShops();
 					signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Texts.of(TextColors.DARK_BLUE, "[AdminShop]")));
 					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
 				}
@@ -267,28 +158,9 @@ public class Main
 					int itemAmount = Integer.parseInt(line1);
 					double price = Double.parseDouble(line2);
 					String itemName = line3;
-					AdminShop shop = new AdminShop(itemAmount, price, itemName, signLocation);
+					AdminShopObject shop = new AdminShopObject(itemAmount, price, itemName, signLocation);
 					buyAdminShops.add(shop);
-					String j = gson.toJson(buyAdminShops);
-
-					try
-					{
-						// Assume default encoding.
-						FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
-
-						// Always wrap FileWriter in BufferedWriter.
-						BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-						bufferedWriter.write(j);
-
-						bufferedWriter.flush();
-						// Always close files.
-						bufferedWriter.close();
-					}
-					catch (IOException ex)
-					{
-						getLogger().error("Could not save JSON file!");
-					}
+					ConfigManager.writeBuyAdminShops();
 					signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Texts.of(TextColors.DARK_BLUE, "[AdminShopSell]")));
 					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
 				}
@@ -311,8 +183,8 @@ public class Main
 			{
 				if (transaction.getOriginal().getState() != null && (transaction.getOriginal().getState().getType() == BlockTypes.WALL_SIGN || transaction.getOriginal().getState().getType() == BlockTypes.STANDING_SIGN))
 				{
-					AdminShop thisShop = null;
-					for (AdminShop shop : adminShops)
+					AdminShopObject thisShop = null;
+					for (AdminShopObject shop : adminShops)
 					{
 						if (shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
 						{
@@ -324,26 +196,7 @@ public class Main
 					{
 						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
 						adminShops.remove(thisShop);
-
-						String json = gson.toJson(adminShops);
-						try
-						{
-							// Assume default encoding.
-							FileWriter fileWriter = new FileWriter("AdminShops.json");
-
-							// Always wrap FileWriter in BufferedWriter.
-							BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-							bufferedWriter.write(json);
-
-							bufferedWriter.flush();
-							// Always close files.
-							bufferedWriter.close();
-						}
-						catch (IOException ex)
-						{
-							getLogger().error("Could not save JSON file!");
-						}
+						ConfigManager.writeAdminShops();
 					}
 					else if (thisShop != null)
 					{
@@ -352,8 +205,8 @@ public class Main
 					}
 					else
 					{
-						AdminShop thisBuyShop = null;
-						for (AdminShop shop : buyAdminShops)
+						AdminShopObject thisBuyShop = null;
+						for (AdminShopObject shop : buyAdminShops)
 						{
 							if (shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
 							{
@@ -365,26 +218,7 @@ public class Main
 						{
 							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
 							buyAdminShops.remove(thisBuyShop);
-							String j = gson.toJson(buyAdminShops);
-
-							try
-							{
-								// Assume default encoding.
-								FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
-
-								// Always wrap FileWriter in BufferedWriter.
-								BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-								bufferedWriter.write(j);
-
-								bufferedWriter.flush();
-								// Always close files.
-								bufferedWriter.close();
-							}
-							catch (IOException ex)
-							{
-								getLogger().error("Could not save JSON file!");
-							}
+							ConfigManager.writeBuyAdminShops();
 						}
 						else if (thisBuyShop != null)
 						{
@@ -406,9 +240,9 @@ public class Main
 
 			if (event.getTargetBlock().getState().getType() != null && (event.getTargetBlock().getState().getType() == BlockTypes.WALL_SIGN || event.getTargetBlock().getState().getType() == BlockTypes.STANDING_SIGN))
 			{
-				AdminShop thisShop = null;
+				AdminShopObject thisShop = null;
 				
-				for (AdminShop adminShop : adminShops)
+				for (AdminShopObject adminShop : adminShops)
 				{
 					if (adminShop.getSignLocation()!= null &&
 					       adminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && adminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && adminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
@@ -435,27 +269,7 @@ public class Main
 						thisShop.setItemName(item.getItemID());
 						adminShops.add(thisShop);
 						items.remove(item);
-						String json = gson.toJson(adminShops);
-
-						try
-						{
-							// Assume default encoding.
-							FileWriter fileWriter = new FileWriter("AdminShops.json");
-
-							// Always wrap FileWriter in BufferedWriter.
-							BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-							bufferedWriter.write(json);
-
-							bufferedWriter.flush();
-							// Always close files.
-							bufferedWriter.close();
-						}
-						catch (IOException ex)
-						{
-							getLogger().error("Could not save JSON file!");
-						}
-
+						ConfigManager.writeAdminShops();
 						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
 					}
 					else
@@ -482,9 +296,9 @@ public class Main
 				}
 				else
 				{
-					AdminShop thisBuyShop = null;
+					AdminShopObject thisBuyShop = null;
 					
-					for (AdminShop buyAdminShop : buyAdminShops)
+					for (AdminShopObject buyAdminShop : buyAdminShops)
 					{
 						if (buyAdminShop.getSignLocation()!= null &&
 						       buyAdminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && buyAdminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && buyAdminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
@@ -511,23 +325,7 @@ public class Main
 							thisBuyShop.setItemName(item.getItemID());
 							buyAdminShops.add(thisBuyShop);
 							items.remove(item);
-							String j = gson.toJson(buyAdminShops);
-
-							// Assume default encoding.
-							try
-							{
-								FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
-								BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-								bufferedWriter.write(j);
-								bufferedWriter.flush();
-								bufferedWriter.close();
-								fileWriter.close();
-							}
-							catch (IOException ex)
-							{
-								getLogger().error("Could not save JSON file!");
-							}
-
+							ConfigManager.writeBuyAdminShops();
 							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
 						}
 						else
