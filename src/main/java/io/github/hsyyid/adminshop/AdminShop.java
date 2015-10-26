@@ -288,7 +288,7 @@ public class AdminShop
 						AccountManager accountManager = totalEconomy.getAccountManager();
 						BigDecimal amount = new BigDecimal(price);
 
-						if (accountManager.getBalance(player.getUniqueId()).intValue() > amount.intValue())
+						if (accountManager.getBalance(player.getUniqueId()).compareTo(amount) >= 0)
 						{
 							accountManager.removeFromBalance(player.getUniqueId(), amount);
 							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
