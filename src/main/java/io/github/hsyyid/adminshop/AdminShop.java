@@ -293,7 +293,7 @@ public class AdminShop
 							accountManager.removeFromBalance(player.getUniqueId(), amount);
 							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
 
-							if (thisShop.getMeta() != null)
+							if (thisShop.getMeta() != -1)
 								game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount + " " + thisShop.getMeta());
 							else
 								game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount);
@@ -349,7 +349,7 @@ public class AdminShop
 							BigDecimal amount = new BigDecimal(price);
 							int quantityInHand = 0;
 
-							if (thisBuyShop.getMeta() != null)
+							if (thisBuyShop.getMeta() != -1)
 							{
 								itemName = (itemName + " " + thisBuyShop.getMeta());
 								

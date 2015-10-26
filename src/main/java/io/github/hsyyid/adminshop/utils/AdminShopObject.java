@@ -6,7 +6,7 @@ import org.spongepowered.api.world.World;
 public class AdminShopObject
 {
 	public int itemAmount;
-	public Integer meta = null;
+	public int meta = -1;
 	public double price;
 	public String itemName;
 	public Location<World> signLocation;
@@ -73,8 +73,8 @@ public class AdminShopObject
 		return itemName;
 	}
 
-	public Integer getMeta()
+	public int getMeta()
 	{
-			return meta;
+		return meta;
 	}
 }
