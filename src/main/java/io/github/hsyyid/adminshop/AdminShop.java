@@ -4,9 +4,9 @@ import com.erigitic.config.AccountManager;
 import com.erigitic.main.TotalEconomy;
 import com.google.inject.Inject;
 import io.github.hsyyid.adminshop.cmdexecutors.SetItemShopExecutor;
+import io.github.hsyyid.adminshop.utils.AdminShopModifierObject;
 import io.github.hsyyid.adminshop.utils.AdminShopObject;
 import io.github.hsyyid.adminshop.utils.ConfigManager;
-import io.github.hsyyid.adminshop.utils.ShopItem;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
@@ -40,7 +40,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
-@Plugin(id = "AdminShop", name = "AdminShop", version = "0.6", dependencies = "required-after:TotalEconomy")
+@Plugin(id = "AdminShop", name = "AdminShop", version = "0.7", dependencies = "required-after:TotalEconomy")
 public class AdminShop
 {
 	public static Game game = null;
@@ -49,7 +49,7 @@ public class AdminShop
 	public static TeleportHelper helper;
 	public static ArrayList<AdminShopObject> adminShops = new ArrayList<AdminShopObject>();
 	public static ArrayList<AdminShopObject> buyAdminShops = new ArrayList<AdminShopObject>();
-	public static ArrayList<ShopItem> items = new ArrayList<ShopItem>();
+	public static ArrayList<AdminShopModifierObject> adminShopModifiers = new ArrayList<AdminShopModifierObject>();
 
 	@Inject
 	private Logger logger;
@@ -95,7 +95,9 @@ public class AdminShop
 		CommandSpec setItemShopCommandSpec = CommandSpec.builder()
 			.description(Texts.of("Sets Item for a AdminShop"))
 			.permission("adminshop.setitem")
-			.arguments(GenericArguments.onlyOne(GenericArguments.string(Texts.of("item ID"))))
+			.arguments(GenericArguments.seq(
+				GenericArguments.onlyOne(GenericArguments.string(Texts.of("item ID"))),
+				GenericArguments.optional(GenericArguments.onlyOne(GenericArguments.integer(Texts.of("meta"))))))
 			.executor(new SetItemShopExecutor())
 			.build();
 
@@ -241,11 +243,11 @@ public class AdminShop
 			if (event.getTargetBlock().getState().getType() != null && (event.getTargetBlock().getState().getType() == BlockTypes.WALL_SIGN || event.getTargetBlock().getState().getType() == BlockTypes.STANDING_SIGN))
 			{
 				AdminShopObject thisShop = null;
-				
+
 				for (AdminShopObject adminShop : adminShops)
 				{
-					if (adminShop.getSignLocation()!= null &&
-					       adminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && adminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && adminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
+					if (adminShop.getSignLocation() != null &&
+						adminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && adminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && adminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
 					{
 						thisShop = adminShop;
 					}
@@ -253,22 +255,26 @@ public class AdminShop
 
 				if (thisShop != null)
 				{
-					ShopItem item = null;
-					for (ShopItem i : items)
+					AdminShopModifierObject shopModifier = null;
+					for (AdminShopModifierObject i : adminShopModifiers)
 					{
 						if (i.getPlayer().getUniqueId() == player.getUniqueId())
 						{
-							item = i;
+							shopModifier = i;
 							break;
 						}
 					}
 
-					if (item != null)
+					if (shopModifier != null)
 					{
 						adminShops.remove(thisShop);
-						thisShop.setItemName(item.getItemID());
+						thisShop.setItemName(shopModifier.getItemID());
+
+						if (shopModifier.getMeta() != null)
+							thisShop.setMeta(shopModifier.getMeta());
+
 						adminShops.add(thisShop);
-						items.remove(item);
+						adminShopModifiers.remove(shopModifier);
 						ConfigManager.writeAdminShops();
 						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
 					}
@@ -286,7 +292,11 @@ public class AdminShop
 						{
 							accountManager.removeFromBalance(player.getUniqueId(), amount);
 							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
-							game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount);
+
+							if (thisShop.getMeta() != null)
+								game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount + " " + thisShop.getMeta());
+							else
+								game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount);
 						}
 						else
 						{
@@ -297,11 +307,11 @@ public class AdminShop
 				else
 				{
 					AdminShopObject thisBuyShop = null;
-					
+
 					for (AdminShopObject buyAdminShop : buyAdminShops)
 					{
-						if (buyAdminShop.getSignLocation()!= null &&
-						       buyAdminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && buyAdminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && buyAdminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
+						if (buyAdminShop.getSignLocation() != null &&
+							buyAdminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && buyAdminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && buyAdminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
 						{
 							thisBuyShop = buyAdminShop;
 						}
@@ -309,8 +319,8 @@ public class AdminShop
 
 					if (thisBuyShop != null)
 					{
-						ShopItem item = null;
-						for (ShopItem i : items)
+						AdminShopModifierObject item = null;
+						for (AdminShopModifierObject i : adminShopModifiers)
 						{
 							if (i.getPlayer().getUniqueId() == player.getUniqueId())
 							{
@@ -324,7 +334,7 @@ public class AdminShop
 							buyAdminShops.remove(thisBuyShop);
 							thisBuyShop.setItemName(item.getItemID());
 							buyAdminShops.add(thisBuyShop);
-							items.remove(item);
+							adminShopModifiers.remove(item);
 							ConfigManager.writeBuyAdminShops();
 							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
 						}
@@ -339,23 +349,49 @@ public class AdminShop
 							BigDecimal amount = new BigDecimal(price);
 							int quantityInHand = 0;
 
-							if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
+							if (thisBuyShop.getMeta() != null)
 							{
-								player.setItemInHand(null);
-								accountManager.addToBalance(player.getUniqueId(), amount, true);
-								player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
-							}
-							else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
-							{
-								quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
-								player.setItemInHand(null);
-								game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
-								accountManager.addToBalance(player.getUniqueId(), amount, true);
-								player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+								itemName = (itemName + " " + thisBuyShop.getMeta());
+								
+								if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
+								{
+									player.setItemInHand(null);
+									accountManager.addToBalance(player.getUniqueId(), amount, true);
+									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+								}
+								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
+								{
+									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
+									player.setItemInHand(null);
+									game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
+									accountManager.addToBalance(player.getUniqueId(), amount, true);
+									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+								}
+								else
+								{
+									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
+								}
 							}
 							else
 							{
-								player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
+								if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
+								{
+									player.setItemInHand(null);
+									accountManager.addToBalance(player.getUniqueId(), amount, true);
+									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+								}
+								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
+								{
+									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
+									player.setItemInHand(null);
+									game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
+									accountManager.addToBalance(player.getUniqueId(), amount, true);
+									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+								}
+								else
+								{
+									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
+								}
 							}
 						}
 					}
