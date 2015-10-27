@@ -29,7 +29,7 @@ public class LocationAdapter extends TypeAdapter<Location<World>>
 		if (location.getExtent() instanceof World)
 		{
 			out.name("world");
-			out.value(((World) location.getExtent()).getUniqueId().toString());
+			out.value(location.getExtent().getUniqueId().toString());
 		}
 		out.name("x");
 		out.value(location.getX());
@@ -75,6 +75,7 @@ public class LocationAdapter extends TypeAdapter<Location<World>>
 		}
 		else
 		{
+			System.out.println("Error! Location's world for AdminShop not found. World UUID: " + worldID);
 			return null;
 		}
 	}

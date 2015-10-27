@@ -24,6 +24,7 @@ import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
+import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.DefaultConfig;
@@ -103,9 +104,6 @@ public class AdminShop
 
 		game.getCommandDispatcher().register(this, setItemShopCommandSpec, "setitem");
 
-		ConfigManager.readAdminShops();
-		ConfigManager.readBuyAdminShops();
-
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop was made by HassanS6000!");
 		getLogger().info("Please post all errors on the Sponge Thread or on GitHub!");
@@ -114,6 +112,17 @@ public class AdminShop
 		getLogger().info("AdminShop loaded!");
 	}
 
+	@Listener
+	public void onServerStart(GameStartedServerEvent event)
+	{
+		getLogger().info("Reading AdminShops from JSON");
+		
+		ConfigManager.readAdminShops();
+		ConfigManager.readBuyAdminShops();
+
+		getLogger().info("AdminShops read from JSON.");
+	}
+	
 	@Listener
 	public void onServerStopping(GameStoppingServerEvent event)
 	{
@@ -352,7 +361,7 @@ public class AdminShop
 							if (thisBuyShop.getMeta() != -1)
 							{
 								itemName = (itemName + " " + thisBuyShop.getMeta());
-								
+
 								if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
 								{
 									player.setItemInHand(null);
