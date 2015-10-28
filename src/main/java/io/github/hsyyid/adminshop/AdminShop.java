@@ -71,7 +71,7 @@ public class AdminShop
 	@Listener
 	public void onServerInit(GameInitializationEvent event)
 	{
-		getLogger().info("AdminShop loading..");
+		getLogger().info("AdminShop loading...");
 
 		game = event.getGame();
 		helper = game.getTeleportHelper();
@@ -94,7 +94,7 @@ public class AdminShop
 		}
 
 		CommandSpec setItemShopCommandSpec = CommandSpec.builder()
-			.description(Texts.of("Sets Item for a AdminShop"))
+			.description(Texts.of("Sets Item for an AdminShop"))
 			.permission("adminshop.setitem")
 			.arguments(GenericArguments.seq(
 				GenericArguments.onlyOne(GenericArguments.string(Texts.of("item ID"))),
@@ -159,7 +159,7 @@ public class AdminShop
 				}
 				else if (player != null)
 				{
-					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
+					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You don't have permission to create an AdminShop!"));
 				}
 			}
 			else if (line0.equals("[AdminShopSell]"))
@@ -177,7 +177,7 @@ public class AdminShop
 				}
 				else if (player != null)
 				{
-					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
+					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You don't have permission to create an AdminShop!"));
 				}
 			}
 		}
@@ -205,13 +205,13 @@ public class AdminShop
 
 					if (thisShop != null && player.hasPermission("adminshop.remove"))
 					{
-						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
+						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "AdminShop successfully removed!"));
 						adminShops.remove(thisShop);
 						ConfigManager.writeAdminShops();
 					}
 					else if (thisShop != null)
 					{
-						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
+						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error! ", TextColors.RED, "You don't have permission to destroy AdminShops!"));
 						event.setCancelled(true);
 					}
 					else
@@ -227,13 +227,13 @@ public class AdminShop
 
 						if (thisBuyShop != null && player.hasPermission("adminshop.remove"))
 						{
-							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
+							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "AdminShop successfully removed!"));
 							buyAdminShops.remove(thisBuyShop);
 							ConfigManager.writeBuyAdminShops();
 						}
 						else if (thisBuyShop != null)
 						{
-							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
+							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error! ", TextColors.RED, "You don't have permission to destroy AdminShops!"));
 							event.setCancelled(true);
 						}
 					}
