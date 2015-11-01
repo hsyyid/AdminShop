@@ -61,7 +61,7 @@ public class ConfigManager
 		}
 		else
 		{
-			System.out.println("Could not read JSON file!");
+			System.out.println("Could not read GSON from JSON file!");
 		}
 	}
 	
