@@ -42,7 +42,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
-@Plugin(id = "AdminShop", name = "AdminShop", version = "0.8", dependencies = "required-after:TotalEconomy")
+@Plugin(id = "AdminShop", name = "AdminShop", version = "0.9", dependencies = "required-after:TotalEconomy")
 public class AdminShop
 {
 	public static Game game = null;
@@ -374,8 +374,10 @@ public class AdminShop
 								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount && player.getItemInHand().get().toContainer().get(new DataQuery("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(new DataQuery("UnsafeDamage")).get() == meta)
 								{
 									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
-									player.setItemInHand(null);
-									game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
+									player.setItemInHand(game.getRegistry().createItemBuilder()
+										.fromItemStack(player.getItemInHand().get())
+										.quantity(quantityInHand)
+										.build());
 									accountManager.addToBalance(player.getUniqueId(), amount, true);
 									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 								}
