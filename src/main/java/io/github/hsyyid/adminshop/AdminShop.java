@@ -1,5 +1,7 @@
 package io.github.hsyyid.adminshop;
 
+import org.spongepowered.api.item.inventory.ItemStackBuilder;
+
 import com.erigitic.config.AccountManager;
 import com.erigitic.main.TotalEconomy;
 import com.google.inject.Inject;
@@ -374,7 +376,7 @@ public class AdminShop
 								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount && player.getItemInHand().get().toContainer().get(new DataQuery("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(new DataQuery("UnsafeDamage")).get() == meta)
 								{
 									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
-									player.setItemInHand(game.getRegistry().createItemBuilder()
+									player.setItemInHand(game.getRegistry().createBuilder(ItemStackBuilder.class)
 										.fromItemStack(player.getItemInHand().get())
 										.quantity(quantityInHand)
 										.build());
