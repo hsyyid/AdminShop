@@ -1,7 +1,5 @@
 package io.github.hsyyid.adminshop;
 
-import org.spongepowered.api.item.inventory.ItemStackBuilder;
-
 import com.erigitic.config.AccountManager;
 import com.erigitic.main.TotalEconomy;
 import com.google.inject.Inject;
@@ -29,6 +27,7 @@ import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
+import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.DefaultConfig;
 import org.spongepowered.api.text.Texts;
@@ -376,7 +375,7 @@ public class AdminShop
 								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount && player.getItemInHand().get().toContainer().get(new DataQuery("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(new DataQuery("UnsafeDamage")).get() == meta)
 								{
 									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
-									player.setItemInHand(game.getRegistry().createBuilder(ItemStackBuilder.class)
+									player.setItemInHand(game.getRegistry().createBuilder(ItemStack.Builder.class)
 										.fromItemStack(player.getItemInHand().get())
 										.quantity(quantityInHand)
 										.build());
