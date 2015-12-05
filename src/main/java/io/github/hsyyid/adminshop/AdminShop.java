@@ -15,6 +15,9 @@ import org.spongepowered.api.Game;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.Sign;
+import org.spongepowered.api.command.args.GenericArguments;
+import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.data.key.Keys;
@@ -29,11 +32,8 @@ import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.plugin.Plugin;
-import org.spongepowered.api.service.config.DefaultConfig;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.util.command.args.GenericArguments;
-import org.spongepowered.api.util.command.spec.CommandSpec;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.TeleportHelper;
 import org.spongepowered.api.world.World;
@@ -43,7 +43,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
-@Plugin(id = "AdminShop", name = "AdminShop", version = "0.9", dependencies = "required-after:TotalEconomy")
+@Plugin(id = "AdminShop", name = "AdminShop", version = "1.0", dependencies = "required-after:TotalEconomy")
 public class AdminShop
 {
 	public static Game game = null;
@@ -104,7 +104,7 @@ public class AdminShop
 			.executor(new SetItemShopExecutor())
 			.build();
 
-		game.getCommandDispatcher().register(this, setItemShopCommandSpec, "setitem");
+		game.getCommandManager().register(this, setItemShopCommandSpec, "setitem");
 
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop was made by HassanS6000!");
@@ -199,7 +199,9 @@ public class AdminShop
 					AdminShopObject thisShop = null;
 					for (AdminShopObject shop : adminShops)
 					{
-						if (shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
+						if (shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() &&
+							shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() &&
+							shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
 						{
 							thisShop = shop;
 						}
@@ -305,9 +307,9 @@ public class AdminShop
 							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
 
 							if (thisShop.getMeta() != -1)
-								game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount + " " + thisShop.getMeta());
+								game.getCommandManager().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount + " " + thisShop.getMeta());
 							else
-								game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount);
+								game.getCommandManager().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount);
 						}
 						else
 						{
@@ -399,7 +401,7 @@ public class AdminShop
 								{
 									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
 									player.setItemInHand(null);
-									game.getCommandDispatcher().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
+									game.getCommandManager().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
 									accountManager.addToBalance(player.getUniqueId(), amount, true);
 									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 								}
