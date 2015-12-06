@@ -297,7 +297,7 @@ public class AdminShop
 						double price = thisShop.getPrice();
 						String itemName = thisShop.getItemName();
 
-						TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance();
+						TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance().get();
 						AccountManager accountManager = totalEconomy.getAccountManager();
 						BigDecimal amount = new BigDecimal(price);
 
@@ -359,7 +359,7 @@ public class AdminShop
 							double price = thisBuyShop.getPrice();
 							String itemName = thisBuyShop.getItemName();
 
-							TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance();
+							TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance().get();
 							AccountManager accountManager = totalEconomy.getAccountManager();
 							BigDecimal amount = new BigDecimal(price);
 							int quantityInHand = 0;
