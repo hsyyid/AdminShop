@@ -33,7 +33,7 @@ import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.plugin.Plugin;
-import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.TeleportHelper;
@@ -44,7 +44,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
-@Plugin(id = "AdminShop", name = "AdminShop", version = "1.0", dependencies = "required-after:TotalEconomy")
+@Plugin(id = "AdminShop", name = "AdminShop", version = "1.1", dependencies = "required-after:TotalEconomy")
 public class AdminShop
 {
 	public static Game game = null;
@@ -97,11 +97,11 @@ public class AdminShop
 		}
 
 		CommandSpec setItemShopCommandSpec = CommandSpec.builder()
-			.description(Texts.of("Sets Item for a AdminShop"))
+			.description(Text.of("Sets Item for a AdminShop"))
 			.permission("adminshop.setitem")
 			.arguments(GenericArguments.seq(
-				GenericArguments.onlyOne(GenericArguments.string(Texts.of("item ID"))),
-				GenericArguments.optional(GenericArguments.onlyOne(GenericArguments.integer(Texts.of("meta"))))))
+				GenericArguments.onlyOne(GenericArguments.string(Text.of("item ID"))),
+				GenericArguments.optional(GenericArguments.onlyOne(GenericArguments.integer(Text.of("meta"))))))
 			.executor(new SetItemShopExecutor())
 			.build();
 
@@ -142,10 +142,10 @@ public class AdminShop
 			Sign sign = event.getTargetTile();
 			Location<World> signLocation = sign.getLocation();
 			SignData signData = event.getText();
-			String line0 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(0));
-			String line1 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(1));
-			String line2 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(2));
-			String line3 = Texts.toPlain(signData.getValue(Keys.SIGN_LINES).get().get(3));
+			String line0 = signData.getValue(Keys.SIGN_LINES).get().get(0).toPlain();
+			String line1 = signData.getValue(Keys.SIGN_LINES).get().get(1).toPlain();
+			String line2 = signData.getValue(Keys.SIGN_LINES).get().get(2).toPlain();
+			String line3 = signData.getValue(Keys.SIGN_LINES).get().get(3).toPlain();
 
 			if (line0.equals("[AdminShop]"))
 			{
@@ -157,12 +157,12 @@ public class AdminShop
 					AdminShopObject shop = new AdminShopObject(itemAmount, price, itemName, signLocation);
 					adminShops.add(shop);
 					ConfigManager.writeAdminShops();
-					signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Texts.of(TextColors.DARK_BLUE, "[AdminShop]")));
-					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
+					signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Text.of(TextColors.DARK_BLUE, "[AdminShop]")));
+					player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
 				}
 				else if (player != null)
 				{
-					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
+					player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
 				}
 			}
 			else if (line0.equals("[AdminShopSell]"))
@@ -175,12 +175,12 @@ public class AdminShop
 					AdminShopObject shop = new AdminShopObject(itemAmount, price, itemName, signLocation);
 					buyAdminShops.add(shop);
 					ConfigManager.writeBuyAdminShops();
-					signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Texts.of(TextColors.DARK_BLUE, "[AdminShopSell]")));
-					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
+					signData = signData.set(signData.getValue(Keys.SIGN_LINES).get().set(0, Text.of(TextColors.DARK_BLUE, "[AdminShopSell]")));
+					player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Successfully created AdminShop!"));
 				}
 				else if (player != null)
 				{
-					player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
+					player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You do not have permission to create an AdminShop!"));
 				}
 			}
 		}
@@ -198,6 +198,7 @@ public class AdminShop
 				if (transaction.getOriginal().getState() != null && (transaction.getOriginal().getState().getType() == BlockTypes.WALL_SIGN || transaction.getOriginal().getState().getType() == BlockTypes.STANDING_SIGN))
 				{
 					AdminShopObject thisShop = null;
+					
 					for (AdminShopObject shop : adminShops)
 					{
 						if (shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() &&
@@ -210,13 +211,13 @@ public class AdminShop
 
 					if (thisShop != null && player.hasPermission("adminshop.remove"))
 					{
-						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
+						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
 						adminShops.remove(thisShop);
 						ConfigManager.writeAdminShops();
 					}
 					else if (thisShop != null)
 					{
-						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
+						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
 						event.setCancelled(true);
 					}
 					else
@@ -232,13 +233,13 @@ public class AdminShop
 
 						if (thisBuyShop != null && player.hasPermission("adminshop.remove"))
 						{
-							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
+							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
 							buyAdminShops.remove(thisBuyShop);
 							ConfigManager.writeBuyAdminShops();
 						}
 						else if (thisBuyShop != null)
 						{
-							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
+							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
 							event.setCancelled(true);
 						}
 					}
@@ -290,7 +291,7 @@ public class AdminShop
 						adminShops.add(thisShop);
 						adminShopModifiers.remove(shopModifier);
 						ConfigManager.writeAdminShops();
-						player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
+						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
 					}
 					else
 					{
@@ -305,7 +306,7 @@ public class AdminShop
 						if (accountManager.getBalance(player.getUniqueId()).compareTo(amount) >= 0)
 						{
 							accountManager.removeFromBalance(player.getUniqueId(), amount);
-							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
+							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
 
 							if (thisShop.getMeta() != -1)
 								game.getCommandManager().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount + " " + thisShop.getMeta());
@@ -314,7 +315,7 @@ public class AdminShop
 						}
 						else
 						{
-							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You don't have enough money to do that!"));
+							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You don't have enough money to do that!"));
 						}
 					}
 				}
@@ -352,7 +353,7 @@ public class AdminShop
 							buyAdminShops.add(thisBuyShop);
 							adminShopModifiers.remove(shopModifier);
 							ConfigManager.writeBuyAdminShops();
-							player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
+							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
 						}
 						else
 						{
@@ -373,7 +374,7 @@ public class AdminShop
 								{
 									player.setItemInHand(null);
 									accountManager.addToBalance(player.getUniqueId(), amount, true);
-									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 								}
 								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount && player.getItemInHand().get().toContainer().get(new DataQuery("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(new DataQuery("UnsafeDamage")).get() == meta)
 								{
@@ -383,11 +384,11 @@ public class AdminShop
 										.quantity(quantityInHand)
 										.build());
 									accountManager.addToBalance(player.getUniqueId(), amount, true);
-									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 								}
 								else
 								{
-									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
+									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
 								}
 							}
 							else
@@ -396,7 +397,7 @@ public class AdminShop
 								{
 									player.setItemInHand(null);
 									accountManager.addToBalance(player.getUniqueId(), amount, true);
-									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 								}
 								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
 								{
@@ -404,11 +405,11 @@ public class AdminShop
 									player.setItemInHand(null);
 									game.getCommandManager().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
 									accountManager.addToBalance(player.getUniqueId(), amount, true);
-									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 								}
 								else
 								{
-									player.sendMessage(Texts.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
+									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
 								}
 							}
 						}
