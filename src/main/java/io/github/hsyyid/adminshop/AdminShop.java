@@ -77,8 +77,10 @@ public class AdminShop
 	{
 		getLogger().info("AdminShop loading..");
 
+		game = Sponge.getGame();
+
 		Optional<EconomyService> optionalEconomyService = game.getServiceManager().provide(EconomyService.class);
-		
+
 		if(!optionalEconomyService.isPresent())
 		{
 			getLogger().error("There is no Economy Plugin installed on this Server! This plugin will not work correctly!");
@@ -88,8 +90,6 @@ public class AdminShop
 		{
 			economyService = optionalEconomyService.get();
 		}
-		
-		game = Sponge.getGame();
 
 		try
 		{
@@ -118,7 +118,7 @@ public class AdminShop
 			.build();
 
 		game.getCommandManager().register(this, setItemShopCommandSpec, "setitem");
-		
+
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop was made by HassanS6000!");
 		getLogger().info("Please post all errors on the Sponge Thread or on GitHub!");
@@ -210,7 +210,7 @@ public class AdminShop
 				if (transaction.getOriginal().getState() != null && (transaction.getOriginal().getState().getType() == BlockTypes.WALL_SIGN || transaction.getOriginal().getState().getType() == BlockTypes.STANDING_SIGN))
 				{
 					AdminShopObject thisShop = null;
-					
+
 					for (AdminShopObject shop : adminShops)
 					{
 						if (shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() &&
@@ -312,14 +312,14 @@ public class AdminShop
 						String itemName = thisShop.getItemName();
 
 						BigDecimal amount = new BigDecimal(price);
-						
+
 						if(!economyService.getAccount(player.getUniqueId()).isPresent())
 						{
 							economyService.createAccount(player.getUniqueId());
 						}
-						
+
 						UniqueAccount playerAccount = economyService.getAccount(player.getUniqueId()).get();
-						
+
 						if (playerAccount.getBalance(economyService.getDefaultCurrency()).compareTo(amount) >= 0)
 						{
 							playerAccount.withdraw(economyService.getDefaultCurrency(), amount, Cause.of(this));
@@ -382,15 +382,15 @@ public class AdminShop
 							{
 								economyService.createAccount(player.getUniqueId());
 							}
-							
+
 							UniqueAccount playerAccount = economyService.getAccount(player.getUniqueId()).get();
 							BigDecimal amount = new BigDecimal(price);
 							int quantityInHand = 0;
-							
+
 							if (thisBuyShop.getMeta() != -1)
 							{
 								int meta = thisBuyShop.getMeta();
-								
+
 								if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount && player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).get() == meta)
 								{
 									player.setItemInHand(null);
