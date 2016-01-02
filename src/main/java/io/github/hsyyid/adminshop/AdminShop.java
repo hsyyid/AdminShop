@@ -1,7 +1,5 @@
 package io.github.hsyyid.adminshop;
 
-import com.erigitic.config.AccountManager;
-import com.erigitic.main.TotalEconomy;
 import com.google.inject.Inject;
 import io.github.hsyyid.adminshop.cmdexecutors.SetItemShopExecutor;
 import io.github.hsyyid.adminshop.utils.AdminShopModifierObject;
@@ -28,29 +26,32 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.service.economy.EconomyService;
+import org.spongepowered.api.service.economy.account.UniqueAccount;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.TeleportHelper;
 import org.spongepowered.api.world.World;
 
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Optional;
 
 @Plugin(id = "AdminShop", name = "AdminShop", version = "1.1", dependencies = "required-after:TotalEconomy")
 public class AdminShop
 {
-	public static Game game = null;
-	public static ConfigurationNode config = null;
+	public static Game game;
+	public static ConfigurationNode config;
+	public static EconomyService economyService;
 	public static ConfigurationLoader<CommentedConfigurationNode> configurationManager;
-	public static TeleportHelper helper;
 	public static ArrayList<AdminShopObject> adminShops = new ArrayList<AdminShopObject>();
 	public static ArrayList<AdminShopObject> buyAdminShops = new ArrayList<AdminShopObject>();
 	public static ArrayList<AdminShopModifierObject> adminShopModifiers = new ArrayList<AdminShopModifierObject>();
@@ -76,8 +77,19 @@ public class AdminShop
 	{
 		getLogger().info("AdminShop loading..");
 
+		Optional<EconomyService> optionalEconomyService = game.getServiceManager().provide(EconomyService.class);
+		
+		if(!optionalEconomyService.isPresent())
+		{
+			getLogger().error("There is no Economy Plugin installed on this Server! This plugin will not work correctly!");
+			return;
+		}
+		else
+		{
+			economyService = optionalEconomyService.get();
+		}
+		
 		game = Sponge.getGame();
-		helper = game.getTeleportHelper();
 
 		try
 		{
@@ -106,7 +118,7 @@ public class AdminShop
 			.build();
 
 		game.getCommandManager().register(this, setItemShopCommandSpec, "setitem");
-
+		
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop was made by HassanS6000!");
 		getLogger().info("Please post all errors on the Sponge Thread or on GitHub!");
@@ -299,13 +311,18 @@ public class AdminShop
 						double price = thisShop.getPrice();
 						String itemName = thisShop.getItemName();
 
-						TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance().get();
-						AccountManager accountManager = totalEconomy.getAccountManager();
 						BigDecimal amount = new BigDecimal(price);
-
-						if (accountManager.getBalance(player.getUniqueId()).compareTo(amount) >= 0)
+						
+						if(!economyService.getAccount(player.getUniqueId()).isPresent())
 						{
-							accountManager.removeFromBalance(player.getUniqueId(), amount);
+							economyService.createAccount(player.getUniqueId());
+						}
+						
+						UniqueAccount playerAccount = economyService.getAccount(player.getUniqueId()).get();
+						
+						if (playerAccount.getBalance(economyService.getDefaultCurrency()).compareTo(amount) >= 0)
+						{
+							playerAccount.withdraw(economyService.getDefaultCurrency(), amount, Cause.of(this));
 							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
 
 							if (thisShop.getMeta() != -1)
@@ -361,8 +378,12 @@ public class AdminShop
 							double price = thisBuyShop.getPrice();
 							String itemName = thisBuyShop.getItemName();
 
-							TotalEconomy totalEconomy = (TotalEconomy) game.getPluginManager().getPlugin("TotalEconomy").get().getInstance().get();
-							AccountManager accountManager = totalEconomy.getAccountManager();
+							if(!economyService.getAccount(player.getUniqueId()).isPresent())
+							{
+								economyService.createAccount(player.getUniqueId());
+							}
+							
+							UniqueAccount playerAccount = economyService.getAccount(player.getUniqueId()).get();
 							BigDecimal amount = new BigDecimal(price);
 							int quantityInHand = 0;
 							
@@ -370,20 +391,20 @@ public class AdminShop
 							{
 								int meta = thisBuyShop.getMeta();
 								
-								if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount && player.getItemInHand().get().toContainer().get(new DataQuery("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(new DataQuery("UnsafeDamage")).get() == meta)
+								if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount && player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).get() == meta)
 								{
 									player.setItemInHand(null);
-									accountManager.addToBalance(player.getUniqueId(), amount, true);
+									playerAccount.deposit(economyService.getDefaultCurrency(), amount, Cause.of(this));
 									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 								}
-								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount && player.getItemInHand().get().toContainer().get(new DataQuery("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(new DataQuery("UnsafeDamage")).get() == meta)
+								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount && player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).get() == meta)
 								{
 									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
 									player.setItemInHand(game.getRegistry().createBuilder(ItemStack.Builder.class)
 										.fromItemStack(player.getItemInHand().get())
 										.quantity(quantityInHand)
 										.build());
-									accountManager.addToBalance(player.getUniqueId(), amount, true);
+									playerAccount.deposit(economyService.getDefaultCurrency(), amount, Cause.of(this));
 									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 								}
 								else
@@ -396,7 +417,7 @@ public class AdminShop
 								if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
 								{
 									player.setItemInHand(null);
-									accountManager.addToBalance(player.getUniqueId(), amount, true);
+									playerAccount.deposit(economyService.getDefaultCurrency(), amount, Cause.of(this));
 									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 								}
 								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
@@ -404,7 +425,7 @@ public class AdminShop
 									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
 									player.setItemInHand(null);
 									game.getCommandManager().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
-									accountManager.addToBalance(player.getUniqueId(), amount, true);
+									playerAccount.deposit(economyService.getDefaultCurrency(), amount, Cause.of(this));
 									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
 								}
 								else
