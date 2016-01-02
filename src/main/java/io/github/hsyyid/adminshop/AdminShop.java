@@ -81,7 +81,7 @@ public class AdminShop
 
 		Optional<EconomyService> optionalEconomyService = game.getServiceManager().provide(EconomyService.class);
 
-		if(!optionalEconomyService.isPresent())
+		if (!optionalEconomyService.isPresent())
 		{
 			getLogger().error("There is no Economy Plugin installed on this Server! This plugin will not work correctly!");
 			return;
@@ -112,7 +112,7 @@ public class AdminShop
 			.description(Text.of("Sets Item for a AdminShop"))
 			.permission("adminshop.setitem")
 			.arguments(GenericArguments.seq(
-				GenericArguments.onlyOne(GenericArguments.string(Text.of("item ID"))),
+				GenericArguments.onlyOne(GenericArguments.string(Text.of("item ID"))), 
 				GenericArguments.optional(GenericArguments.onlyOne(GenericArguments.integer(Text.of("meta"))))))
 			.executor(new SetItemShopExecutor())
 			.build();
@@ -213,9 +213,7 @@ public class AdminShop
 
 					for (AdminShopObject shop : adminShops)
 					{
-						if (shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() &&
-							shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() &&
-							shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
+						if (shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
 						{
 							thisShop = shop;
 						}
@@ -273,8 +271,7 @@ public class AdminShop
 
 				for (AdminShopObject adminShop : adminShops)
 				{
-					if (adminShop.getSignLocation() != null &&
-						adminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && adminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && adminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
+					if (adminShop.getSignLocation() != null && adminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && adminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && adminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
 					{
 						thisShop = adminShop;
 					}
@@ -313,7 +310,7 @@ public class AdminShop
 
 						BigDecimal amount = new BigDecimal(price);
 
-						if(!economyService.getAccount(player.getUniqueId()).isPresent())
+						if (!economyService.getAccount(player.getUniqueId()).isPresent())
 						{
 							economyService.createAccount(player.getUniqueId());
 						}
@@ -323,7 +320,7 @@ public class AdminShop
 						if (playerAccount.getBalance(economyService.getDefaultCurrency()).compareTo(amount) >= 0)
 						{
 							playerAccount.withdraw(economyService.getDefaultCurrency(), amount, Cause.of(this));
-							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " dollars."));
+							player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " ")).append(economyService.getDefaultCurrency().getPluralDisplayName()).build());
 
 							if (thisShop.getMeta() != -1)
 								game.getCommandManager().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount + " " + thisShop.getMeta());
@@ -342,8 +339,7 @@ public class AdminShop
 
 					for (AdminShopObject buyAdminShop : buyAdminShops)
 					{
-						if (buyAdminShop.getSignLocation() != null &&
-							buyAdminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && buyAdminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && buyAdminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
+						if (buyAdminShop.getSignLocation() != null && buyAdminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && buyAdminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && buyAdminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
 						{
 							thisBuyShop = buyAdminShop;
 						}
@@ -378,7 +374,7 @@ public class AdminShop
 							double price = thisBuyShop.getPrice();
 							String itemName = thisBuyShop.getItemName();
 
-							if(!economyService.getAccount(player.getUniqueId()).isPresent())
+							if (!economyService.getAccount(player.getUniqueId()).isPresent())
 							{
 								economyService.createAccount(player.getUniqueId());
 							}
@@ -395,17 +391,14 @@ public class AdminShop
 								{
 									player.setItemInHand(null);
 									playerAccount.deposit(economyService.getDefaultCurrency(), amount, Cause.of(this));
-									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(economyService.getDefaultCurrency().getPluralDisplayName()).build());
 								}
 								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount && player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).get() == meta)
 								{
 									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
-									player.setItemInHand(game.getRegistry().createBuilder(ItemStack.Builder.class)
-										.fromItemStack(player.getItemInHand().get())
-										.quantity(quantityInHand)
-										.build());
+									player.setItemInHand(game.getRegistry().createBuilder(ItemStack.Builder.class).fromItemStack(player.getItemInHand().get()).quantity(quantityInHand).build());
 									playerAccount.deposit(economyService.getDefaultCurrency(), amount, Cause.of(this));
-									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(economyService.getDefaultCurrency().getPluralDisplayName()).build());
 								}
 								else
 								{
@@ -418,7 +411,7 @@ public class AdminShop
 								{
 									player.setItemInHand(null);
 									playerAccount.deposit(economyService.getDefaultCurrency(), amount, Cause.of(this));
-									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(economyService.getDefaultCurrency().getPluralDisplayName()).build());
 								}
 								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
 								{
@@ -426,7 +419,7 @@ public class AdminShop
 									player.setItemInHand(null);
 									game.getCommandManager().process(game.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
 									playerAccount.deposit(economyService.getDefaultCurrency(), amount, Cause.of(this));
-									player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " dollars."));
+									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(economyService.getDefaultCurrency().getPluralDisplayName()).build());
 								}
 								else
 								{
