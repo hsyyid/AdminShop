@@ -45,7 +45,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Optional;
 
-@Plugin(id = "AdminShop", name = "AdminShop", version = "1.1", dependencies = "required-after:TotalEconomy")
+@Plugin(id = "AdminShop", name = "AdminShop", version = "1.1")
 public class AdminShop
 {
 	public static Game game;
