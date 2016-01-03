@@ -19,6 +19,7 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
+import org.spongepowered.api.event.game.state.GamePostInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.plugin.Plugin;
@@ -30,7 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
 
-@Plugin(id = "AdminShop", name = "AdminShop", version = "1.1")
+@Plugin(id = "AdminShop", name = "AdminShop", version = "1.2")
 public class AdminShop
 {
 	public static Game game;
@@ -58,23 +59,11 @@ public class AdminShop
 	private ConfigurationLoader<CommentedConfigurationNode> confManager;
 
 	@Listener
-	public void onServerInit(GameInitializationEvent event)
+	public void onGameInit(GameInitializationEvent event)
 	{
-		getLogger().info("AdminShop loading..");
+		getLogger().info("AdminShop loading...");
 
 		game = Sponge.getGame();
-
-		Optional<EconomyService> optionalEconomyService = game.getServiceManager().provide(EconomyService.class);
-
-		if (!optionalEconomyService.isPresent())
-		{
-			getLogger().error("There is no Economy Plugin installed on this Server! This plugin will not work correctly!");
-			return;
-		}
-		else
-		{
-			economyService = optionalEconomyService.get();
-		}
 
 		try
 		{
@@ -114,6 +103,22 @@ public class AdminShop
 		getLogger().info("Have fun, and enjoy! :D");
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop loaded!");
+	}
+	
+	@Listener
+	public void onGamePostInit(GamePostInitializationEvent event)
+	{
+		Optional<EconomyService> optionalEconomyService = game.getServiceManager().provide(EconomyService.class);
+
+		if (!optionalEconomyService.isPresent())
+		{
+			getLogger().error("There is no Economy Plugin installed on this Server! This plugin will not work correctly!");
+			return;
+		}
+		else
+		{
+			economyService = optionalEconomyService.get();
+		}
 	}
 
 	@Listener
