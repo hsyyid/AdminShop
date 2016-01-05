@@ -12,6 +12,7 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
+import org.spongepowered.api.service.economy.transaction.ResultType;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
@@ -77,10 +78,10 @@ public class PlayerInteractBlockListener
 						}
 
 						UniqueAccount playerAccount = AdminShop.economyService.getAccount(player.getUniqueId()).get();
+						ResultType result = playerAccount.withdraw(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this)).getResult();
 
-						if (playerAccount.getBalance(AdminShop.economyService.getDefaultCurrency()).compareTo(amount) >= 0)
+						if (result == ResultType.SUCCESS)
 						{
-							playerAccount.withdraw(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this));
 							player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
 
 							if (thisShop.getMeta() != -1)
@@ -88,9 +89,13 @@ public class PlayerInteractBlockListener
 							else
 								Sponge.getGame().getCommandManager().process(Sponge.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount);
 						}
-						else
+						else if (result == ResultType.ACCOUNT_NO_FUNDS)
 						{
 							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You don't have enough money to do that!"));
+						}
+						else if (result == ResultType.FAILED)
+						{
+							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
 						}
 					}
 				}
@@ -150,16 +155,40 @@ public class PlayerInteractBlockListener
 
 								if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount && player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).get() == meta)
 								{
-									player.setItemInHand(null);
-									playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this));
-									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+									ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this)).getResult();
+
+									if (result == ResultType.SUCCESS)
+									{
+										player.setItemInHand(null);
+										player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+									}
+									else if (result == ResultType.ACCOUNT_NO_SPACE)
+									{
+										player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Your account has no space for this!"));
+									}
+									else if (result == ResultType.FAILED)
+									{
+										player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
+									}
 								}
 								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount && player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).get() == meta)
 								{
-									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
-									player.getItemInHand().get().setQuantity(quantityInHand);
-									playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this));
-									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+									ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this)).getResult();
+
+									if (result == ResultType.SUCCESS)
+									{
+										quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
+										player.getItemInHand().get().setQuantity(quantityInHand);
+										player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+									}
+									else if (result == ResultType.ACCOUNT_NO_SPACE)
+									{
+										player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Your account has no space for this!"));
+									}
+									else if (result == ResultType.FAILED)
+									{
+										player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
+									}
 								}
 								else
 								{
@@ -170,17 +199,41 @@ public class PlayerInteractBlockListener
 							{
 								if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
 								{
-									player.setItemInHand(null);
-									playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this));
-									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+									ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this)).getResult();
+
+									if (result == ResultType.SUCCESS)
+									{
+										player.setItemInHand(null);
+										player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+									}
+									else if (result == ResultType.ACCOUNT_NO_SPACE)
+									{
+										player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Your account has no space for this!"));
+									}
+									else if (result == ResultType.FAILED)
+									{
+										player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
+									}
 								}
 								else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
 								{
-									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
-									player.setItemInHand(null);
-									Sponge.getGame().getCommandManager().process(Sponge.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
-									playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this));
-									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+									ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this)).getResult();
+
+									if (result == ResultType.SUCCESS)
+									{
+										quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
+										player.setItemInHand(null);
+										Sponge.getGame().getCommandManager().process(Sponge.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
+										player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+									}
+									else if (result == ResultType.ACCOUNT_NO_SPACE)
+									{
+										player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Your account has no space for this!"));
+									}
+									else if (result == ResultType.FAILED)
+									{
+										player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
+									}
 								}
 								else
 								{
