@@ -34,6 +34,12 @@ import java.util.Optional;
 @Plugin(id = "AdminShop", name = "AdminShop", version = "1.2")
 public class AdminShop
 {
+	protected AdminShop()
+	{
+		;
+	}
+
+	private static AdminShop adminShop;
 	public static Game game;
 	public static ConfigurationNode config;
 	public static EconomyService economyService;
@@ -41,6 +47,11 @@ public class AdminShop
 	public static ArrayList<AdminShopObject> adminShops = new ArrayList<AdminShopObject>();
 	public static ArrayList<AdminShopObject> buyAdminShops = new ArrayList<AdminShopObject>();
 	public static ArrayList<AdminShopModifierObject> adminShopModifiers = new ArrayList<AdminShopModifierObject>();
+
+	public static AdminShop getAdminShop()
+	{
+		return adminShop;
+	}
 
 	@Inject
 	private Logger logger;
@@ -61,6 +72,7 @@ public class AdminShop
 	@Listener
 	public void onGameInit(GameInitializationEvent event)
 	{
+		adminShop = this;
 		getLogger().info("AdminShop loading...");
 
 		game = Sponge.getGame();
@@ -96,7 +108,7 @@ public class AdminShop
 		game.getEventManager().registerListeners(this, new ChangeSignListener());
 		game.getEventManager().registerListeners(this, new PlayerBreakBlockListener());
 		game.getEventManager().registerListeners(this, new PlayerInteractBlockListener());
-		
+
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop was made by HassanS6000!");
 		getLogger().info("Please post all errors on the Sponge Thread or on GitHub!");
@@ -104,7 +116,7 @@ public class AdminShop
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop loaded!");
 	}
-	
+
 	@Listener
 	public void onGamePostInit(GamePostInitializationEvent event)
 	{

@@ -18,7 +18,7 @@ import java.util.Arrays;
 public class ConfigManager
 {
 	private static Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(Location.class, new LocationAdapter()).create();
-	
+
 	public static void readAdminShops()
 	{
 		String json = null;
@@ -29,7 +29,8 @@ public class ConfigManager
 		}
 		catch (IOException e)
 		{
-			System.out.println("Could not read JSON file!");
+			AdminShop.getAdminShop().getLogger().error("Could not read JSON file!");
+			return;
 		}
 
 		if (json != null)
@@ -38,21 +39,22 @@ public class ConfigManager
 		}
 		else
 		{
-			System.out.println("Could not read GSON from JSON file!");
+			AdminShop.getAdminShop().getLogger().error("Could not read GSON from JSON file!");
 		}
 	}
-	
+
 	public static void readBuyAdminShops()
 	{
 		String json = null;
-		
+
 		try
 		{
 			json = readFile("BuyAdminShops.json", StandardCharsets.UTF_8);
 		}
 		catch (IOException e)
 		{
-			System.out.println("Could not read JSON file!");
+			AdminShop.getAdminShop().getLogger().error("Could not read JSON file!");
+			return;
 		}
 
 		if (json != null)
@@ -61,14 +63,14 @@ public class ConfigManager
 		}
 		else
 		{
-			System.out.println("Could not read GSON from JSON file!");
+			AdminShop.getAdminShop().getLogger().error("Could not read GSON from JSON file!");
 		}
 	}
-	
+
 	public static void writeAdminShops()
 	{
 		String json = gson.toJson(AdminShop.adminShops);
-		
+
 		try
 		{
 			FileWriter fileWriter = new FileWriter("AdminShops.json");
@@ -79,14 +81,14 @@ public class ConfigManager
 		}
 		catch (IOException ex)
 		{
-			System.out.println("Could not save JSON file!");
+			AdminShop.getAdminShop().getLogger().error("Could not save JSON file!");
 		}
 	}
-	
+
 	public static void writeBuyAdminShops()
 	{
 		String json = gson.toJson(AdminShop.buyAdminShops);
-		
+
 		try
 		{
 			FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
@@ -97,10 +99,10 @@ public class ConfigManager
 		}
 		catch (IOException ex)
 		{
-			System.out.println("Could not save JSON file!");
+			AdminShop.getAdminShop().getLogger().error("Could not save JSON file!");
 		}
 	}
-	
+
 	private static String readFile(String path, Charset encoding) throws IOException
 	{
 		byte[] encoded = Files.readAllBytes(Paths.get(path));
