@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
 
-@Plugin(id = "AdminShop", name = "AdminShop", version = "1.2")
+@Plugin(id = "AdminShop", name = "AdminShop", version = "1.3")
 public class AdminShop
 {
 	protected AdminShop()

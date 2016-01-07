@@ -4,7 +4,7 @@ import io.github.hsyyid.adminshop.AdminShop;
 import io.github.hsyyid.adminshop.utils.AdminShopModifierObject;
 import io.github.hsyyid.adminshop.utils.AdminShopObject;
 import io.github.hsyyid.adminshop.utils.ConfigManager;
-import org.spongepowered.api.Sponge;
+import io.github.hsyyid.adminshop.utils.ItemUtil;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.entity.living.player.Player;
@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 
 public class PlayerInteractBlockListener
 {
+
 	@Listener
 	public void onPlayerInteractBlock(InteractBlockEvent event)
 	{
@@ -85,9 +86,13 @@ public class PlayerInteractBlockListener
 							player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
 
 							if (thisShop.getMeta() != -1)
-								Sponge.getGame().getCommandManager().process(Sponge.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount + " " + thisShop.getMeta());
+							{
+								ItemUtil.givePlayerItem(player, itemName, itemAmount, thisShop.getMeta());
+							}
 							else
-								Sponge.getGame().getCommandManager().process(Sponge.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + itemAmount);
+							{
+								ItemUtil.givePlayerItem(player, itemName, itemAmount);
+							}
 						}
 						else if (result == ResultType.ACCOUNT_NO_FUNDS)
 						{
@@ -223,7 +228,7 @@ public class PlayerInteractBlockListener
 									{
 										quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
 										player.setItemInHand(null);
-										Sponge.getGame().getCommandManager().process(Sponge.getServer().getConsole(), "minecraft:give" + " " + player.getName() + " " + itemName + " " + quantityInHand);
+										ItemUtil.givePlayerItem(player, itemName, quantityInHand);
 										player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
 									}
 									else if (result == ResultType.ACCOUNT_NO_SPACE)
