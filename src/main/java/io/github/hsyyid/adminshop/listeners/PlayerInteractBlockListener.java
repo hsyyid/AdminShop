@@ -43,6 +43,7 @@ public class PlayerInteractBlockListener
 				if (thisShop != null)
 				{
 					AdminShopModifierObject shopModifier = null;
+					
 					for (AdminShopModifierObject i : AdminShop.adminShopModifiers)
 					{
 						if (i.getPlayer().getUniqueId() == player.getUniqueId())
@@ -62,6 +63,7 @@ public class PlayerInteractBlockListener
 
 						AdminShop.adminShops.add(thisShop);
 						AdminShop.adminShopModifiers.remove(shopModifier);
+						
 						ConfigManager.writeAdminShops();
 						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
 					}

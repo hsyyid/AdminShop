@@ -25,15 +25,30 @@ public class SetItemShopExecutor implements CommandExecutor
 		if (src instanceof Player)
 		{
 			Player player = (Player) src;
-			AdminShopModifierObject item = null;
+
+			AdminShopModifierObject modifierToRemove = null;
+
+			for (AdminShopModifierObject adminShopModifierObject : AdminShop.adminShopModifiers)
+			{
+				if (adminShopModifierObject.getPlayer().getUniqueId().equals(player.getUniqueId()))
+				{
+					modifierToRemove = adminShopModifierObject;
+					break;
+				}
+			}
 			
+			if(modifierToRemove != null)
+				AdminShop.adminShopModifiers.remove(modifierToRemove);
+
+			AdminShopModifierObject item = null;
+
 			if (meta.isPresent())
 				item = new AdminShopModifierObject(player, itemID, meta.get());
 			else
 				item = new AdminShopModifierObject(player, itemID);
-			
+
 			AdminShop.adminShopModifiers.add(item);
-			
+
 			player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "Right click an AdminShop sign!"));
 		}
 		else if (src instanceof ConsoleSource)
