@@ -1,6 +1,7 @@
 package io.github.hsyyid.adminshop.utils;
 
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.ItemType;
@@ -19,7 +20,8 @@ public class ItemUtil
 		if (itemType.isPresent())
 		{
 			ItemStack stack = ItemStack.builder().itemType(itemType.get()).quantity(quantity).build();
-			stack.toContainer().set(DataQuery.of("UnsafeDamage"), meta);
+			DataContainer container = stack.toContainer().set(DataQuery.of("UnsafeDamage"), meta);
+			stack = ItemStack.builder().fromContainer(container).build();
 			player.getInventory().offer(stack);
 		}
 		else
