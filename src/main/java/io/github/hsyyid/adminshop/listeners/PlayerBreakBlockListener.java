@@ -49,9 +49,10 @@ public class PlayerBreakBlockListener
 					else
 					{
 						AdminShopObject thisBuyShop = null;
+
 						for (AdminShopObject shop : AdminShop.buyAdminShops)
 						{
-							if (shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
+							if (shop.getSignLocation() != null && transaction.getOriginal().getLocation().isPresent() && shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
 							{
 								thisBuyShop = shop;
 							}
