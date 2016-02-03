@@ -23,13 +23,13 @@ public class PlayerBreakBlockListener
 
 			for (Transaction<BlockSnapshot> transaction : event.getTransactions())
 			{
-				if (transaction.getOriginal().getState() != null && (transaction.getOriginal().getState().getType() == BlockTypes.WALL_SIGN || transaction.getOriginal().getState().getType() == BlockTypes.STANDING_SIGN))
+				if (transaction.getOriginal().getState().getType() == BlockTypes.WALL_SIGN || transaction.getOriginal().getState().getType() == BlockTypes.STANDING_SIGN)
 				{
 					AdminShopObject thisShop = null;
 
 					for (AdminShopObject shop : AdminShop.adminShops)
 					{
-						if (shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
+						if (transaction.getOriginal().getLocation().isPresent() && shop.getSignLocation() != null && shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
 						{
 							thisShop = shop;
 						}
