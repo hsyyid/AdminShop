@@ -12,6 +12,7 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.filter.cause.First;
+import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
 import org.spongepowered.api.service.economy.transaction.ResultType;
 import org.spongepowered.api.text.Text;
@@ -117,6 +118,7 @@ public class PlayerInteractBlockListener
 				if (thisBuyShop != null)
 				{
 					AdminShopModifierObject shopModifier = null;
+					
 					for (AdminShopModifierObject i : AdminShop.adminShopModifiers)
 					{
 						if (i.getPlayer().getUniqueId() == player.getUniqueId())
@@ -181,7 +183,9 @@ public class PlayerInteractBlockListener
 								if (result == ResultType.SUCCESS)
 								{
 									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
-									player.getItemInHand().get().setQuantity(quantityInHand);
+									ItemStack stack = player.getItemInHand().get();
+									stack.setQuantity(quantityInHand);
+									player.setItemInHand(stack);
 									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
 								}
 								else if (result == ResultType.ACCOUNT_NO_SPACE)
@@ -225,8 +229,9 @@ public class PlayerInteractBlockListener
 								if (result == ResultType.SUCCESS)
 								{
 									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
-									player.setItemInHand(null);
-									ItemUtil.givePlayerItem(player, itemName, quantityInHand);
+									ItemStack stack = player.getItemInHand().get();
+									stack.setQuantity(quantityInHand);
+									player.setItemInHand(stack);
 									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
 								}
 								else if (result == ResultType.ACCOUNT_NO_SPACE)

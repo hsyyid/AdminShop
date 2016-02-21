@@ -26,11 +26,9 @@ public class LocationAdapter extends TypeAdapter<Location<World>>
 
 		out.beginObject();
 
-		if (location.getExtent() instanceof World)
-		{
-			out.name("world");
-			out.value(location.getExtent().getUniqueId().toString());
-		}
+		out.name("world");
+		out.value(location.getExtent().getUniqueId().toString());
+
 		out.name("x");
 		out.value(location.getX());
 
@@ -41,7 +39,6 @@ public class LocationAdapter extends TypeAdapter<Location<World>>
 		out.value(location.getZ());
 
 		out.endObject();
-
 	}
 
 	@Override
