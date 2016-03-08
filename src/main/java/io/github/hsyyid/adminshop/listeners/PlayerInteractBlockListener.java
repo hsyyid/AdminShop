@@ -11,6 +11,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.NamedCause;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
@@ -72,13 +73,8 @@ public class PlayerInteractBlockListener
 
 					BigDecimal amount = new BigDecimal(price);
 
-					if (!AdminShop.economyService.getAccount(player.getUniqueId()).isPresent())
-					{
-						AdminShop.economyService.createAccount(player.getUniqueId());
-					}
-
-					UniqueAccount playerAccount = AdminShop.economyService.getAccount(player.getUniqueId()).get();
-					ResultType result = playerAccount.withdraw(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this)).getResult();
+					UniqueAccount playerAccount = AdminShop.economyService.getOrCreateAccount(player.getUniqueId()).get();
+					ResultType result = playerAccount.withdraw(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(NamedCause.source(player))).getResult();
 
 					if (result == ResultType.SUCCESS)
 					{
@@ -118,7 +114,7 @@ public class PlayerInteractBlockListener
 				if (thisBuyShop != null)
 				{
 					AdminShopModifierObject shopModifier = null;
-					
+
 					for (AdminShopModifierObject i : AdminShop.adminShopModifiers)
 					{
 						if (i.getPlayer().getUniqueId() == player.getUniqueId())
@@ -145,12 +141,7 @@ public class PlayerInteractBlockListener
 						double price = thisBuyShop.getPrice();
 						String itemName = thisBuyShop.getItemName();
 
-						if (!AdminShop.economyService.getAccount(player.getUniqueId()).isPresent())
-						{
-							AdminShop.economyService.createAccount(player.getUniqueId());
-						}
-
-						UniqueAccount playerAccount = AdminShop.economyService.getAccount(player.getUniqueId()).get();
+						UniqueAccount playerAccount = AdminShop.economyService.getOrCreateAccount(player.getUniqueId()).get();
 						BigDecimal amount = new BigDecimal(price);
 						int quantityInHand = 0;
 
@@ -160,7 +151,7 @@ public class PlayerInteractBlockListener
 
 							if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount && player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).get() == meta)
 							{
-								ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this)).getResult();
+								ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(NamedCause.source(player))).getResult();
 
 								if (result == ResultType.SUCCESS)
 								{
@@ -178,7 +169,7 @@ public class PlayerInteractBlockListener
 							}
 							else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount && player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).get() == meta)
 							{
-								ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this)).getResult();
+								ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(NamedCause.source(player))).getResult();
 
 								if (result == ResultType.SUCCESS)
 								{
@@ -206,7 +197,7 @@ public class PlayerInteractBlockListener
 						{
 							if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
 							{
-								ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this)).getResult();
+								ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(NamedCause.source(player))).getResult();
 
 								if (result == ResultType.SUCCESS)
 								{
@@ -224,7 +215,7 @@ public class PlayerInteractBlockListener
 							}
 							else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
 							{
-								ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(this)).getResult();
+								ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(NamedCause.source(player))).getResult();
 
 								if (result == ResultType.SUCCESS)
 								{

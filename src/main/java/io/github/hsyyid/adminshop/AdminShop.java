@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
 
-@Plugin(id = "AdminShop", name = "AdminShop", version = "1.4")
+@Plugin(id = "io.github.hsyyid.adminshop", name = "AdminShop", description = "This plugin adds sign shops for users to buy items.", version = "1.5")
 public class AdminShop
 {
 	protected AdminShop()
