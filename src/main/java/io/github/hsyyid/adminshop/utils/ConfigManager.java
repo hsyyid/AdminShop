@@ -36,6 +36,8 @@ public class ConfigManager
 
 	public static void writeShops()
 	{
+		Configs.removeChildren(shopConfig, new Object[] { "shops" });
+
 		AdminShop.shops.forEach((u, s) -> {
 			try
 			{

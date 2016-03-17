@@ -84,8 +84,8 @@ public class PlayerInteractBlockListener
 					}
 					else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() > shop.getItem().getCount())
 					{
-						int quantityInHand = player.getItemInHand().get().getQuantity() - shop.getItem().getCount();
 						ItemStack stack = player.getItemInHand().get();
+						int quantityInHand = stack.getQuantity() - shop.getItem().getCount();
 						stack.setQuantity(quantityInHand);
 						player.setItemInHand(stack);
 					}
@@ -99,7 +99,6 @@ public class PlayerInteractBlockListener
 
 					if (result == ResultType.SUCCESS)
 					{
-						player.setItemInHand(null);
 						player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + shop.getItem().getCount() + " " + shop.getItem().getType().getName() + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
 					}
 					else if (result == ResultType.ACCOUNT_NO_SPACE)
