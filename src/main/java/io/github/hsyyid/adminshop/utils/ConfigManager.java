@@ -1,111 +1,51 @@
 package io.github.hsyyid.adminshop.utils;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.common.reflect.TypeToken;
 import io.github.hsyyid.adminshop.AdminShop;
-import org.spongepowered.api.world.Location;
+import io.github.hsyyid.adminshop.config.Config;
+import io.github.hsyyid.adminshop.config.Configs;
+import io.github.hsyyid.adminshop.config.Configurable;
+import io.github.hsyyid.adminshop.config.ShopConfig;
+import ninja.leaping.configurate.commented.CommentedConfigurationNode;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.UUID;
 
 public class ConfigManager
 {
-	private static Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(Location.class, new LocationAdapter()).create();
+	private static Configurable mainConfig = Config.getConfig();
+	private static Configurable shopConfig = ShopConfig.getConfig();
 
-	public static void readAdminShops()
+	public static void readShops()
 	{
-		String json = null;
+		AdminShop.shops.clear();
 
-		try
-		{
-			json = readFile("AdminShops.json", StandardCharsets.UTF_8);
-		}
-		catch (IOException e)
-		{
-			AdminShop.getAdminShop().getLogger().error("Could not read JSON file!");
-			return;
-		}
+		CommentedConfigurationNode node = shopConfig.get().getNode("shops");
 
-		if (json != null)
-		{
-			AdminShop.adminShops = new ArrayList<AdminShopObject>(Arrays.asList(gson.fromJson(json, AdminShopObject[].class)));
-		}
-		else
-		{
-			AdminShop.getAdminShop().getLogger().error("Could not read GSON from JSON file!");
-		}
+		node.getChildrenMap().forEach((k, v) -> {
+			try
+			{
+				AdminShop.shops.put(UUID.fromString(String.valueOf(k)), v.getValue(TypeToken.of(Shop.class), new Shop()));
+			}
+			catch (ObjectMappingException e)
+			{
+				AdminShop.getAdminShop().getLogger().error(e.getMessage());
+			}
+		});
 	}
 
-	public static void readBuyAdminShops()
+	public static void writeShops()
 	{
-		String json = null;
-
-		try
-		{
-			json = readFile("BuyAdminShops.json", StandardCharsets.UTF_8);
-		}
-		catch (IOException e)
-		{
-			AdminShop.getAdminShop().getLogger().error("Could not read JSON file!");
-			return;
-		}
-
-		if (json != null)
-		{
-			AdminShop.buyAdminShops = new ArrayList<AdminShopObject>(Arrays.asList(gson.fromJson(json, AdminShopObject[].class)));
-		}
-		else
-		{
-			AdminShop.getAdminShop().getLogger().error("Could not read GSON from JSON file!");
-		}
-	}
-
-	public static void writeAdminShops()
-	{
-		String json = gson.toJson(AdminShop.adminShops);
-
-		try
-		{
-			FileWriter fileWriter = new FileWriter("AdminShops.json");
-			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-			bufferedWriter.write(json);
-			bufferedWriter.flush();
-			bufferedWriter.close();
-		}
-		catch (IOException ex)
-		{
-			AdminShop.getAdminShop().getLogger().error("Could not save JSON file!");
-		}
-	}
-
-	public static void writeBuyAdminShops()
-	{
-		String json = gson.toJson(AdminShop.buyAdminShops);
-
-		try
-		{
-			FileWriter fileWriter = new FileWriter("BuyAdminShops.json");
-			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-			bufferedWriter.write(json);
-			bufferedWriter.flush();
-			bufferedWriter.close();
-		}
-		catch (IOException ex)
-		{
-			AdminShop.getAdminShop().getLogger().error("Could not save JSON file!");
-		}
-	}
-
-	private static String readFile(String path, Charset encoding) throws IOException
-	{
-		byte[] encoded = Files.readAllBytes(Paths.get(path));
-		return new String(encoded, encoding);
+		AdminShop.shops.forEach((u, s) -> {
+			try
+			{
+				shopConfig.get().getNode("shops", u.toString()).setValue(TypeToken.of(Shop.class), s);
+				Configs.saveConfig(shopConfig);
+			}
+			catch (ObjectMappingException e)
+			{
+				AdminShop.getAdminShop().getLogger().error(e.getMessage());
+			}
+		});
 	}
 }

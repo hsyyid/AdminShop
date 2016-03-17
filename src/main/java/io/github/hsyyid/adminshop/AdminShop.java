@@ -1,22 +1,22 @@
 package io.github.hsyyid.adminshop;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import io.github.hsyyid.adminshop.cmdexecutors.SetItemShopExecutor;
-import io.github.hsyyid.adminshop.listeners.ChangeSignListener;
+import io.github.hsyyid.adminshop.cmdexecutors.SetShopExecutor;
+import io.github.hsyyid.adminshop.config.Config;
+import io.github.hsyyid.adminshop.config.ShopConfig;
 import io.github.hsyyid.adminshop.listeners.PlayerBreakBlockListener;
 import io.github.hsyyid.adminshop.listeners.PlayerInteractBlockListener;
-import io.github.hsyyid.adminshop.utils.AdminShopModifierObject;
-import io.github.hsyyid.adminshop.utils.AdminShopObject;
 import io.github.hsyyid.adminshop.utils.ConfigManager;
+import io.github.hsyyid.adminshop.utils.Shop;
+import io.github.hsyyid.adminshop.utils.ShopModifier;
 import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.commented.CommentedConfigurationNode;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.slf4j.Logger;
-import org.spongepowered.api.Game;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
-import org.spongepowered.api.config.DefaultConfig;
+import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePostInitializationEvent;
@@ -26,12 +26,15 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.text.Text;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
-@Plugin(id = "io.github.hsyyid.adminshop", name = "AdminShop", description = "This plugin adds sign shops for users to buy items.", version = "1.5")
+@Plugin(id = "io.github.hsyyid.adminshop", name = "AdminShop", description = "This plugin adds sign shops for users to buy items.", version = "1.6")
 public class AdminShop
 {
 	protected AdminShop()
@@ -40,13 +43,10 @@ public class AdminShop
 	}
 
 	private static AdminShop adminShop;
-	public static Game game;
 	public static ConfigurationNode config;
 	public static EconomyService economyService;
-	public static ConfigurationLoader<CommentedConfigurationNode> configurationManager;
-	public static ArrayList<AdminShopObject> adminShops = new ArrayList<AdminShopObject>();
-	public static ArrayList<AdminShopObject> buyAdminShops = new ArrayList<AdminShopObject>();
-	public static ArrayList<AdminShopModifierObject> adminShopModifiers = new ArrayList<AdminShopModifierObject>();
+	public static Map<UUID, Shop> shops = Maps.newHashMap();
+	public static Set<ShopModifier> shopModifiers = Sets.newHashSet();
 
 	public static AdminShop getAdminShop()
 	{
@@ -62,52 +62,64 @@ public class AdminShop
 	}
 
 	@Inject
-	@DefaultConfig(sharedRoot = true)
-	private File dConfig;
+	@ConfigDir(sharedRoot = false)
+	private Path configDir;
 
-	@Inject
-	@DefaultConfig(sharedRoot = true)
-	private ConfigurationLoader<CommentedConfigurationNode> confManager;
+	public Path getConfigDir()
+	{
+		return configDir;
+	}
 
 	@Listener
-	public void onGameInit(GameInitializationEvent event)
+	public void init(GameInitializationEvent event)
 	{
 		adminShop = this;
 		getLogger().info("AdminShop loading...");
 
-		game = Sponge.getGame();
-
-		try
+		// Create Config Directory for AdminShop
+		if (!Files.exists(configDir))
 		{
-			if (!dConfig.exists())
+			try
 			{
-				dConfig.createNewFile();
-				config = confManager.load();
-				confManager.save(config);
+				Files.createDirectories(configDir);
 			}
-			configurationManager = confManager;
-			config = confManager.load();
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+		}
 
-		}
-		catch (IOException exception)
+		// Create data Directory for AdminShop
+		if (!Files.exists(configDir.resolve("data")))
 		{
-			getLogger().error("The default configuration could not be loaded or created!");
+			try
+			{
+				Files.createDirectories(configDir.resolve("data"));
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
 		}
+
+		// Create config.conf
+		Config.getConfig().setup();
+		// Create shops.conf
+		ShopConfig.getConfig().setup();
 
 		CommandSpec setItemShopCommandSpec = CommandSpec.builder()
-			.description(Text.of("Sets Item for a AdminShop"))
-			.permission("adminshop.setitem")
+			.description(Text.of("Creates AdminShops"))
+			.permission("adminshop.command.setshop")
 			.arguments(GenericArguments.seq(
-				GenericArguments.onlyOne(GenericArguments.string(Text.of("item ID"))), 
-				GenericArguments.optional(GenericArguments.onlyOne(GenericArguments.integer(Text.of("meta"))))))
-			.executor(new SetItemShopExecutor())
+				GenericArguments.onlyOne(GenericArguments.doubleNum(Text.of("price"))), 
+				GenericArguments.optional(GenericArguments.onlyOne(GenericArguments.bool(Text.of("buy shop"))))))
+			.executor(new SetShopExecutor())
 			.build();
 
-		game.getCommandManager().register(this, setItemShopCommandSpec, "setitem");
+		Sponge.getCommandManager().register(this, setItemShopCommandSpec, "setshop");
 
-		game.getEventManager().registerListeners(this, new ChangeSignListener());
-		game.getEventManager().registerListeners(this, new PlayerBreakBlockListener());
-		game.getEventManager().registerListeners(this, new PlayerInteractBlockListener());
+		Sponge.getEventManager().registerListeners(this, new PlayerBreakBlockListener());
+		Sponge.getEventManager().registerListeners(this, new PlayerInteractBlockListener());
 
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop was made by HassanS6000!");
@@ -118,9 +130,9 @@ public class AdminShop
 	}
 
 	@Listener
-	public void onGamePostInit(GamePostInitializationEvent event)
+	public void postInit(GamePostInitializationEvent event)
 	{
-		Optional<EconomyService> optionalEconomyService = game.getServiceManager().provide(EconomyService.class);
+		Optional<EconomyService> optionalEconomyService = Sponge.getServiceManager().provide(EconomyService.class);
 
 		if (!optionalEconomyService.isPresent())
 		{
@@ -136,23 +148,16 @@ public class AdminShop
 	@Listener
 	public void onServerStart(GameStartedServerEvent event)
 	{
-		getLogger().info("Reading AdminShops from JSON");
+		getLogger().info("Reading Shops...");
 
-		ConfigManager.readAdminShops();
-		ConfigManager.readBuyAdminShops();
+		ConfigManager.readShops();
 
-		getLogger().info("AdminShops read from JSON.");
+		getLogger().info("Finished reading Shops.");
 	}
 
 	@Listener
 	public void onServerStopping(GameStoppingServerEvent event)
 	{
-		ConfigManager.writeAdminShops();
-		ConfigManager.writeBuyAdminShops();
-	}
-
-	public static ConfigurationLoader<CommentedConfigurationNode> getConfigManager()
-	{
-		return configurationManager;
+		ConfigManager.writeShops();
 	}
 }

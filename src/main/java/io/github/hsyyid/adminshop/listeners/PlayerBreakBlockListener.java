@@ -1,75 +1,43 @@
 package io.github.hsyyid.adminshop.listeners;
 
 import io.github.hsyyid.adminshop.AdminShop;
-import io.github.hsyyid.adminshop.utils.AdminShopObject;
 import io.github.hsyyid.adminshop.utils.ConfigManager;
+import io.github.hsyyid.adminshop.utils.Shop;
 import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
+
+import java.util.Optional;
 
 public class PlayerBreakBlockListener
 {
 	@Listener
-	public void onPlayerBreakBlock(ChangeBlockEvent.Break event)
+	public void onPlayerBreakBlock(ChangeBlockEvent.Break event, @First Player player)
 	{
-		if (event.getCause().first(Player.class).isPresent())
+		for (Transaction<BlockSnapshot> transaction : event.getTransactions())
 		{
-			Player player = (Player) event.getCause().first(Player.class).get();
+			Location<World> location = transaction.getOriginal().getLocation().get();
+			Optional<Shop> shop = AdminShop.shops.values().stream().filter(s -> s.getSignLocation().equals(location)).findAny();
 
-			for (Transaction<BlockSnapshot> transaction : event.getTransactions())
+			if (shop.isPresent())
 			{
-				if (transaction.getOriginal().getState().getType() == BlockTypes.WALL_SIGN || transaction.getOriginal().getState().getType() == BlockTypes.STANDING_SIGN)
+				if (player.hasPermission("adminshop.remove"))
 				{
-					AdminShopObject thisShop = null;
-
-					for (AdminShopObject shop : AdminShop.adminShops)
-					{
-						if (transaction.getOriginal().getLocation().isPresent() && shop.getSignLocation() != null && shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
-						{
-							thisShop = shop;
-						}
-					}
-
-					if (thisShop != null && player.hasPermission("adminshop.remove"))
-					{
-						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
-						AdminShop.adminShops.remove(thisShop);
-						ConfigManager.writeAdminShops();
-					}
-					else if (thisShop != null)
-					{
-						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
-						event.setCancelled(true);
-					}
-					else
-					{
-						AdminShopObject thisBuyShop = null;
-
-						for (AdminShopObject shop : AdminShop.buyAdminShops)
-						{
-							if (shop.getSignLocation() != null && transaction.getOriginal().getLocation().isPresent() && shop.getSignLocation().getX() == transaction.getOriginal().getLocation().get().getX() && shop.getSignLocation().getY() == transaction.getOriginal().getLocation().get().getY() && shop.getSignLocation().getZ() == transaction.getOriginal().getLocation().get().getZ())
-							{
-								thisBuyShop = shop;
-							}
-						}
-
-						if (thisBuyShop != null && player.hasPermission("adminshop.remove"))
-						{
-							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]:", TextColors.GREEN, " AdminShop successfully removed!"));
-							AdminShop.buyAdminShops.remove(thisBuyShop);
-							ConfigManager.writeBuyAdminShops();
-						}
-						else if (thisBuyShop != null)
-						{
-							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: Error!", TextColors.RED, " you do not have permission to destroy AdminShops!"));
-							event.setCancelled(true);
-						}
-					}
+					AdminShop.shops.values().remove(shop.get());
+					ConfigManager.writeShops();
+					player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Shop successfully removed!"));
+				}
+				else
+				{
+					player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.RED, "You do not have permission to remove shops."));
+					event.setCancelled(true);
 				}
 			}
 		}

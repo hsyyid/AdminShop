@@ -1,12 +1,10 @@
 package io.github.hsyyid.adminshop.listeners;
 
 import io.github.hsyyid.adminshop.AdminShop;
-import io.github.hsyyid.adminshop.utils.AdminShopModifierObject;
-import io.github.hsyyid.adminshop.utils.AdminShopObject;
 import io.github.hsyyid.adminshop.utils.ConfigManager;
-import io.github.hsyyid.adminshop.utils.ItemUtil;
+import io.github.hsyyid.adminshop.utils.Shop;
+import io.github.hsyyid.adminshop.utils.ShopModifier;
 import org.spongepowered.api.block.BlockTypes;
-import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
@@ -18,76 +16,109 @@ import org.spongepowered.api.service.economy.account.UniqueAccount;
 import org.spongepowered.api.service.economy.transaction.ResultType;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.UUID;
 
 public class PlayerInteractBlockListener
 {
 	@Listener
-	public void onPlayerInteractBlock(InteractBlockEvent event, @First Player player)
+	public void onPlayerRightClickBlock(InteractBlockEvent.Secondary event, @First Player player)
 	{
 		if (event.getTargetBlock().getState().getType() == BlockTypes.WALL_SIGN || event.getTargetBlock().getState().getType() == BlockTypes.STANDING_SIGN)
 		{
-			AdminShopObject thisShop = null;
+			Location<World> location = event.getTargetBlock().getLocation().get();
+			Optional<Shop> foundShop = AdminShop.shops.values().stream().filter(s -> s.getSignLocation().equals(location)).findAny();
+			Optional<ShopModifier> shopModifier = AdminShop.shopModifiers.stream().filter(s -> s.getUuid().equals(player.getUniqueId())).findAny();
 
-			for (AdminShopObject adminShop : AdminShop.adminShops)
+			if (!foundShop.isPresent())
 			{
-				if (adminShop.getSignLocation() != null && adminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && adminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && adminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
+				if (shopModifier.isPresent())
 				{
-					thisShop = adminShop;
+					if (player.hasPermission("adminshop.create"))
+					{
+						AdminShop.shops.put(UUID.randomUUID(), new Shop(location, shopModifier.get().getItem(), shopModifier.get().getPrice(), shopModifier.get().isBuyShop()));
+						AdminShop.shopModifiers.remove(shopModifier.get());
+						ConfigManager.writeShops();
+						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Created shop!"));
+					}
+					else
+					{
+						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.RED, "You do not have permission to create AdminShops."));
+					}
+
+					return;
 				}
 			}
-
-			if (thisShop != null)
+			else if (shopModifier.isPresent())
 			{
-				AdminShopModifierObject shopModifier = null;
-
-				for (AdminShopModifierObject i : AdminShop.adminShopModifiers)
+				if (player.hasPermission("adminshop.modify"))
 				{
-					if (i.getPlayer().getUniqueId() == player.getUniqueId())
-					{
-						shopModifier = i;
-						break;
-					}
-				}
-
-				if (shopModifier != null)
-				{
-					AdminShop.adminShops.remove(thisShop);
-					thisShop.setItemName(shopModifier.getItemID());
-
-					if (shopModifier.getMeta() != null)
-						thisShop.setMeta(shopModifier.getMeta());
-
-					AdminShop.adminShops.add(thisShop);
-					AdminShop.adminShopModifiers.remove(shopModifier);
-
-					ConfigManager.writeAdminShops();
-					player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
+					AdminShop.shops.values().remove(foundShop.get());
+					AdminShop.shops.put(UUID.randomUUID(), new Shop(location, shopModifier.get().getItem(), shopModifier.get().getPrice(), shopModifier.get().isBuyShop()));
+					AdminShop.shopModifiers.remove(shopModifier.get());
+					ConfigManager.writeShops();
+					player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Updated shop."));
 				}
 				else
 				{
-					int itemAmount = thisShop.getItemAmount();
-					double price = thisShop.getPrice();
-					String itemName = thisShop.getItemName();
+					player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.RED, "You do not have permission to modify AdminShops."));
+				}
 
-					BigDecimal amount = new BigDecimal(price);
+				return;
+			}
+			else
+			{
+				Shop shop = foundShop.get();
+				BigDecimal price = new BigDecimal(shop.getPrice());
+				UniqueAccount playerAccount = AdminShop.economyService.getOrCreateAccount(player.getUniqueId()).get();
 
-					UniqueAccount playerAccount = AdminShop.economyService.getOrCreateAccount(player.getUniqueId()).get();
-					ResultType result = playerAccount.withdraw(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(NamedCause.source(player))).getResult();
+				if (shop.isBuyShop())
+				{
+					if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() == shop.getItem().getCount())
+					{
+						player.setItemInHand(null);
+					}
+					else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() > shop.getItem().getCount())
+					{
+						int quantityInHand = player.getItemInHand().get().getQuantity() - shop.getItem().getCount();
+						ItemStack stack = player.getItemInHand().get();
+						stack.setQuantity(quantityInHand);
+						player.setItemInHand(stack);
+					}
+					else
+					{
+						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
+						return;
+					}
+
+					ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), price, Cause.of(NamedCause.source(player))).getResult();
 
 					if (result == ResultType.SUCCESS)
 					{
-						player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+						player.setItemInHand(null);
+						player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + shop.getItem().getCount() + " " + shop.getItem().getType().getName() + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+					}
+					else if (result == ResultType.ACCOUNT_NO_SPACE)
+					{
+						player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Your account has no space for this!"));
+					}
+					else if (result == ResultType.FAILED)
+					{
+						player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
+					}
+				}
+				else
+				{
+					ResultType result = playerAccount.withdraw(AdminShop.economyService.getDefaultCurrency(), price, Cause.of(NamedCause.source(player))).getResult();
 
-						if (thisShop.getMeta() != -1)
-						{
-							ItemUtil.givePlayerItem(player, itemName, itemAmount, thisShop.getMeta());
-						}
-						else
-						{
-							ItemUtil.givePlayerItem(player, itemName, itemAmount);
-						}
+					if (result == ResultType.SUCCESS)
+					{
+						player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + shop.getItem().getCount() + " " + shop.getItem().getType().getName() + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+						player.getInventory().offer(shop.getItem().createStack());
 					}
 					else if (result == ResultType.ACCOUNT_NO_FUNDS)
 					{
@@ -96,149 +127,6 @@ public class PlayerInteractBlockListener
 					else if (result == ResultType.FAILED)
 					{
 						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
-					}
-				}
-			}
-			else
-			{
-				AdminShopObject thisBuyShop = null;
-
-				for (AdminShopObject buyAdminShop : AdminShop.buyAdminShops)
-				{
-					if (buyAdminShop.getSignLocation() != null && buyAdminShop.getSignLocation().getX() == event.getTargetBlock().getLocation().get().getX() && buyAdminShop.getSignLocation().getY() == event.getTargetBlock().getLocation().get().getY() && buyAdminShop.getSignLocation().getZ() == event.getTargetBlock().getLocation().get().getZ())
-					{
-						thisBuyShop = buyAdminShop;
-					}
-				}
-
-				if (thisBuyShop != null)
-				{
-					AdminShopModifierObject shopModifier = null;
-
-					for (AdminShopModifierObject i : AdminShop.adminShopModifiers)
-					{
-						if (i.getPlayer().getUniqueId() == player.getUniqueId())
-						{
-							shopModifier = i;
-							break;
-						}
-					}
-
-					if (shopModifier != null)
-					{
-						AdminShop.buyAdminShops.remove(thisBuyShop);
-						thisBuyShop.setItemName(shopModifier.getItemID());
-						if (shopModifier.getMeta() != null)
-							thisBuyShop.setMeta(shopModifier.getMeta());
-						AdminShop.buyAdminShops.add(thisBuyShop);
-						AdminShop.adminShopModifiers.remove(shopModifier);
-						ConfigManager.writeBuyAdminShops();
-						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Successfully set new item ID."));
-					}
-					else
-					{
-						int itemAmount = thisBuyShop.getItemAmount();
-						double price = thisBuyShop.getPrice();
-						String itemName = thisBuyShop.getItemName();
-
-						UniqueAccount playerAccount = AdminShop.economyService.getOrCreateAccount(player.getUniqueId()).get();
-						BigDecimal amount = new BigDecimal(price);
-						int quantityInHand = 0;
-
-						if (thisBuyShop.getMeta() != -1)
-						{
-							int meta = thisBuyShop.getMeta();
-
-							if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount && player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).get() == meta)
-							{
-								ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(NamedCause.source(player))).getResult();
-
-								if (result == ResultType.SUCCESS)
-								{
-									player.setItemInHand(null);
-									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
-								}
-								else if (result == ResultType.ACCOUNT_NO_SPACE)
-								{
-									player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Your account has no space for this!"));
-								}
-								else if (result == ResultType.FAILED)
-								{
-									player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
-								}
-							}
-							else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount && player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).isPresent() && (Integer) player.getItemInHand().get().toContainer().get(DataQuery.of("UnsafeDamage")).get() == meta)
-							{
-								ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(NamedCause.source(player))).getResult();
-
-								if (result == ResultType.SUCCESS)
-								{
-									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
-									ItemStack stack = player.getItemInHand().get();
-									stack.setQuantity(quantityInHand);
-									player.setItemInHand(stack);
-									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
-								}
-								else if (result == ResultType.ACCOUNT_NO_SPACE)
-								{
-									player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Your account has no space for this!"));
-								}
-								else if (result == ResultType.FAILED)
-								{
-									player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
-								}
-							}
-							else
-							{
-								player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
-							}
-						}
-						else
-						{
-							if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() == itemAmount)
-							{
-								ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(NamedCause.source(player))).getResult();
-
-								if (result == ResultType.SUCCESS)
-								{
-									player.setItemInHand(null);
-									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
-								}
-								else if (result == ResultType.ACCOUNT_NO_SPACE)
-								{
-									player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Your account has no space for this!"));
-								}
-								else if (result == ResultType.FAILED)
-								{
-									player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
-								}
-							}
-							else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().getName().equals(itemName) && player.getItemInHand().get().getQuantity() > itemAmount)
-							{
-								ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), amount, Cause.of(NamedCause.source(player))).getResult();
-
-								if (result == ResultType.SUCCESS)
-								{
-									quantityInHand = player.getItemInHand().get().getQuantity() - itemAmount;
-									ItemStack stack = player.getItemInHand().get();
-									stack.setQuantity(quantityInHand);
-									player.setItemInHand(stack);
-									player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + itemAmount + " " + itemName + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
-								}
-								else if (result == ResultType.ACCOUNT_NO_SPACE)
-								{
-									player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Your account has no space for this!"));
-								}
-								else if (result == ResultType.FAILED)
-								{
-									player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
-								}
-							}
-							else
-							{
-								player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
-							}
-						}
 					}
 				}
 			}
