@@ -11,6 +11,8 @@ import io.github.hsyyid.adminshop.config.ShopConfig;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.world.Location;
@@ -96,12 +98,16 @@ public class ConfigManager
 
 				if (itemType.isPresent())
 				{
+					ItemStack stack = ItemStack.builder().itemType(itemType.get()).quantity(adminShop.getItemAmount()).build();
+
 					if (adminShop.getMeta() == -1)
 					{
-						ItemStack stack = ItemStack.builder().itemType(itemType.get()).quantity(adminShop.getItemAmount()).build();
-						Shop shop = new Shop(adminShop.getSignLocation(), stack.createSnapshot(), adminShop.getPrice(), false);
-						AdminShop.shops.put(UUID.randomUUID(), shop);
+						DataContainer container = stack.toContainer().set(DataQuery.of("UnsafeDamage"), adminShop.getMeta());
+						stack = ItemStack.builder().fromContainer(container).build();
 					}
+
+					Shop shop = new Shop(adminShop.getSignLocation(), stack.createSnapshot(), adminShop.getPrice(), false);
+					AdminShop.shops.put(UUID.randomUUID(), shop);
 				}
 			}
 
@@ -135,12 +141,16 @@ public class ConfigManager
 
 				if (itemType.isPresent())
 				{
-					if (buyShop.getMeta() == -1)
+					ItemStack stack = ItemStack.builder().itemType(itemType.get()).quantity(buyShop.getItemAmount()).build();
+
+					if (buyShop.getMeta() != -1)
 					{
-						ItemStack stack = ItemStack.builder().itemType(itemType.get()).quantity(buyShop.getItemAmount()).build();
-						Shop shop = new Shop(buyShop.getSignLocation(), stack.createSnapshot(), buyShop.getPrice(), true);
-						AdminShop.shops.put(UUID.randomUUID(), shop);
+						DataContainer container = stack.toContainer().set(DataQuery.of("UnsafeDamage"), buyShop.getMeta());
+						stack = ItemStack.builder().fromContainer(container).build();
 					}
+
+					Shop shop = new Shop(buyShop.getSignLocation(), stack.createSnapshot(), buyShop.getPrice(), true);
+					AdminShop.shops.put(UUID.randomUUID(), shop);
 				}
 			}
 
