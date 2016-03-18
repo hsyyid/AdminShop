@@ -34,7 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-@Plugin(id = "io.github.hsyyid.adminshop", name = "AdminShop", description = "This plugin adds sign shops for users to buy items.", version = "1.6")
+@Plugin(id = "io.github.hsyyid.adminshop", name = "AdminShop", description = "This plugin adds sign shops for users to buy items.", version = "1.6b")
 public class AdminShop
 {
 	protected AdminShop()
