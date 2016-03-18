@@ -100,7 +100,7 @@ public class ConfigManager
 				{
 					ItemStack stack = ItemStack.builder().itemType(itemType.get()).quantity(adminShop.getItemAmount()).build();
 
-					if (adminShop.getMeta() == -1)
+					if (adminShop.getMeta() != -1)
 					{
 						DataContainer container = stack.toContainer().set(DataQuery.of("UnsafeDamage"), adminShop.getMeta());
 						stack = ItemStack.builder().fromContainer(container).build();
