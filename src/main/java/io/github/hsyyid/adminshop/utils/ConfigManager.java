@@ -46,7 +46,10 @@ public class ConfigManager
 		node.getChildrenMap().forEach((k, v) -> {
 			try
 			{
-				AdminShop.shops.put(UUID.fromString(String.valueOf(k)), v.getValue(TypeToken.of(Shop.class), new Shop()));
+				if (shopConfig.get().getNode("shops", String.valueOf(k), "signLocation").getValue() != null)
+				{
+					AdminShop.shops.put(UUID.fromString(String.valueOf(k)), v.getValue(TypeToken.of(Shop.class), new Shop()));
+				}
 			}
 			catch (ObjectMappingException e)
 			{
