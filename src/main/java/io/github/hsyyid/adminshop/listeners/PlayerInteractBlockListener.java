@@ -107,7 +107,11 @@ public class PlayerInteractBlockListener
 							// TODO: Update this when Sponge supports it
 							// entity.offer(Keys.DIRECTION, location.getBlock().get(Keys.DIRECTION).get());
 							((EntityHanging) entity).updateFacingWithBoundingBox(EnumFacing.byName(location.getBlock().get(Keys.DIRECTION).get().name()));
-							location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(player)));
+
+							if (((EntityHanging) entity).onValidSurface())
+							{
+								location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(player)));
+							}
 						}
 					}
 
