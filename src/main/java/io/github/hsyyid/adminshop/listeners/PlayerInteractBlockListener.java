@@ -84,6 +84,23 @@ public class PlayerInteractBlockListener
 					AdminShop.shops.put(UUID.randomUUID(), new Shop(location, shopModifier.get().getItem(), shopModifier.get().getPrice(), shopModifier.get().isBuyShop()));
 					AdminShop.shopModifiers.remove(shopModifier.get());
 					ConfigManager.writeShops();
+
+					if (ConfigManager.shouldAddItemFrames() && location.getBlock().getType() == BlockTypes.WALL_SIGN)
+					{
+						Location<World> frameLocation = location.add(0, 1, 0);
+						Optional<Entity> itemFrame = location.getExtent().createEntity(EntityTypes.ITEM_FRAME, frameLocation.getPosition());
+
+						if (itemFrame.isPresent())
+						{
+							ItemFrame entity = (ItemFrame) itemFrame.get();
+							entity.offer(Keys.REPRESENTED_ITEM, shopModifier.get().getItem());
+							// TODO: Update this when Sponge supports it
+							// entity.offer(Keys.DIRECTION, location.getBlock().get(Keys.DIRECTION).get());
+							((EntityHanging) entity).updateFacingWithBoundingBox(EnumFacing.byName(location.getBlock().get(Keys.DIRECTION).get().name()));
+							location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(player)));
+						}
+					}
+
 					player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Updated shop."));
 				}
 				else
