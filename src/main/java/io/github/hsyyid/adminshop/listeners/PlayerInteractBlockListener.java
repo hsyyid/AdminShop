@@ -26,6 +26,7 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -62,7 +63,11 @@ public class PlayerInteractBlockListener
 								// TODO: Update this when Sponge supports it
 								// entity.offer(Keys.DIRECTION, location.getBlock().get(Keys.DIRECTION).get());
 								((EntityHanging) entity).updateFacingWithBoundingBox(EnumFacing.byName(location.getBlock().get(Keys.DIRECTION).get().name()));
-								location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(player)));
+
+								if (((EntityHanging) entity).onValidSurface())
+								{
+									location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(player)));
+								}
 							}
 						}
 
@@ -85,9 +90,14 @@ public class PlayerInteractBlockListener
 					AdminShop.shopModifiers.remove(shopModifier.get());
 					ConfigManager.writeShops();
 
-					if (ConfigManager.shouldAddItemFrames() && location.getBlock().getType() == BlockTypes.WALL_SIGN)
+					if (!shopModifier.get().getItem().equals(foundShop.get().getItem()) && ConfigManager.shouldAddItemFrames() && location.getBlock().getType() == BlockTypes.WALL_SIGN)
 					{
 						Location<World> frameLocation = location.add(0, 1, 0);
+
+						// Remove Previous ItemFrames if existing
+						Collection<Entity> foundItemFrames = location.getExtent().getEntities(e -> e.getLocation().equals(frameLocation) && e.getType() == EntityTypes.ITEM_FRAME);
+						foundItemFrames.forEach(e -> e.remove());
+
 						Optional<Entity> itemFrame = location.getExtent().createEntity(EntityTypes.ITEM_FRAME, frameLocation.getPosition());
 
 						if (itemFrame.isPresent())
