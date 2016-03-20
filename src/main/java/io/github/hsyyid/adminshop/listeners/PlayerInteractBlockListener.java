@@ -4,7 +4,13 @@ import io.github.hsyyid.adminshop.AdminShop;
 import io.github.hsyyid.adminshop.utils.ConfigManager;
 import io.github.hsyyid.adminshop.utils.Shop;
 import io.github.hsyyid.adminshop.utils.ShopModifier;
+import net.minecraft.entity.EntityHanging;
+import net.minecraft.util.EnumFacing;
 import org.spongepowered.api.block.BlockTypes;
+import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.EntityTypes;
+import org.spongepowered.api.entity.hanging.ItemFrame;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
@@ -43,6 +49,23 @@ public class PlayerInteractBlockListener
 						AdminShop.shops.put(UUID.randomUUID(), new Shop(location, shopModifier.get().getItem(), shopModifier.get().getPrice(), shopModifier.get().isBuyShop()));
 						AdminShop.shopModifiers.remove(shopModifier.get());
 						ConfigManager.writeShops();
+
+						if (ConfigManager.shouldAddItemFrames() && location.getBlock().getType() == BlockTypes.WALL_SIGN)
+						{
+							Location<World> frameLocation = location.add(0, 1, 0);
+							Optional<Entity> itemFrame = location.getExtent().createEntity(EntityTypes.ITEM_FRAME, frameLocation.getPosition());
+
+							if (itemFrame.isPresent())
+							{
+								ItemFrame entity = (ItemFrame) itemFrame.get();
+								entity.offer(Keys.REPRESENTED_ITEM, shopModifier.get().getItem());
+								// TODO: Update this when Sponge supports it
+								// entity.offer(Keys.DIRECTION, location.getBlock().get(Keys.DIRECTION).get());
+								((EntityHanging) entity).updateFacingWithBoundingBox(EnumFacing.byName(location.getBlock().get(Keys.DIRECTION).get().name()));
+								location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(player)));
+							}
+						}
+
 						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Created shop!"));
 					}
 					else
@@ -99,7 +122,7 @@ public class PlayerInteractBlockListener
 
 					if (result == ResultType.SUCCESS)
 					{
-						player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + shop.getItem().getCount() + " " + shop.getItem().getType().getName() + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+						player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + shop.getItem().getCount() + " " + shop.getItem().getType().getTranslation().get() + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
 					}
 					else if (result == ResultType.ACCOUNT_NO_SPACE)
 					{
@@ -116,7 +139,7 @@ public class PlayerInteractBlockListener
 
 					if (result == ResultType.SUCCESS)
 					{
-						player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + shop.getItem().getCount() + " " + shop.getItem().getType().getName() + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+						player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just bought " + shop.getItem().getCount() + " " + shop.getItem().getType().getTranslation().get() + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
 						player.getInventory().offer(shop.getItem().createStack());
 					}
 					else if (result == ResultType.ACCOUNT_NO_FUNDS)

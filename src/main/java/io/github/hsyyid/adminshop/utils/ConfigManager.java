@@ -34,6 +34,21 @@ public class ConfigManager
 	private static Configurable mainConfig = Config.getConfig();
 	private static Configurable shopConfig = ShopConfig.getConfig();
 
+	public static boolean shouldAddItemFrames()
+	{
+		CommentedConfigurationNode valueNode = Configs.getConfig(mainConfig).getNode("shops", "item-frames");
+
+		if (valueNode.getValue() != null)
+		{
+			return valueNode.getBoolean();
+		}
+		else
+		{
+			Configs.setValue(mainConfig, valueNode.getPath(), true);
+			return true;
+		}
+	}
+
 	public static void readShops()
 	{
 		AdminShop.shops.clear();

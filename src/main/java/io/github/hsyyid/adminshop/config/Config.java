@@ -83,7 +83,7 @@ public class Config implements Configurable
 	@Override
 	public void populate()
 	{
-		;
+		get().getNode("shops", "item-frames").setValue(true).setComment("This value determines whether or not to automatically place an item frame above shops.");
 	}
 
 	@Override
