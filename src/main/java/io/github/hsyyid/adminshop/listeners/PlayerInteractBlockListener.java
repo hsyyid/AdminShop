@@ -49,7 +49,6 @@ public class PlayerInteractBlockListener
 					{
 						AdminShop.shops.put(UUID.randomUUID(), new Shop(location, shopModifier.get().getItem(), shopModifier.get().getPrice(), shopModifier.get().isBuyShop()));
 						AdminShop.shopModifiers.remove(shopModifier.get());
-						ConfigManager.writeShops();
 
 						if (ConfigManager.shouldAddItemFrames() && location.getBlock().getType() == BlockTypes.WALL_SIGN)
 						{
