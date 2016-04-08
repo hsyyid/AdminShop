@@ -158,7 +158,7 @@ public class PlayerInteractBlockListener
 					{
 						player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Your account has no space for this!"));
 					}
-					else if (result == ResultType.FAILED)
+					else
 					{
 						player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
 					}
@@ -176,7 +176,7 @@ public class PlayerInteractBlockListener
 					{
 						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You don't have enough money to do that!"));
 					}
-					else if (result == ResultType.FAILED)
+					else
 					{
 						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
 					}

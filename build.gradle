@@ -19,7 +19,7 @@ apply plugin: 'eclipse'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-version = '1.7b'
+version = '1.7c'
 group = "io.github.hsyyid"
 archivesBaseName = "AdminShop"
 
