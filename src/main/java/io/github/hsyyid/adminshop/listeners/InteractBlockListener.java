@@ -30,7 +30,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-public class PlayerInteractBlockListener
+public class InteractBlockListener
 {
 	@Listener
 	public void onPlayerRightClickBlock(InteractBlockEvent.Secondary event, @First Player player)

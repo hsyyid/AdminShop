@@ -6,8 +6,8 @@ import com.google.inject.Inject;
 import io.github.hsyyid.adminshop.cmdexecutors.SetShopExecutor;
 import io.github.hsyyid.adminshop.config.Config;
 import io.github.hsyyid.adminshop.config.ShopConfig;
-import io.github.hsyyid.adminshop.listeners.PlayerBreakBlockListener;
-import io.github.hsyyid.adminshop.listeners.PlayerInteractBlockListener;
+import io.github.hsyyid.adminshop.listeners.BreakBlockListener;
+import io.github.hsyyid.adminshop.listeners.InteractBlockListener;
 import io.github.hsyyid.adminshop.utils.ConfigManager;
 import io.github.hsyyid.adminshop.utils.Shop;
 import io.github.hsyyid.adminshop.utils.ShopModifier;
@@ -34,7 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-@Plugin(id = "io.github.hsyyid.adminshop", name = "AdminShop", description = "This plugin adds sign shops for users to buy items.", version = "1.7c")
+@Plugin(id = "io.github.hsyyid.adminshop", name = "AdminShop", description = "This plugin adds sign shops for users to buy items.", version = "1.8")
 public class AdminShop
 {
 	protected AdminShop()
@@ -118,8 +118,8 @@ public class AdminShop
 
 		Sponge.getCommandManager().register(this, setItemShopCommandSpec, "setshop");
 
-		Sponge.getEventManager().registerListeners(this, new PlayerBreakBlockListener());
-		Sponge.getEventManager().registerListeners(this, new PlayerInteractBlockListener());
+		Sponge.getEventManager().registerListeners(this, new BreakBlockListener());
+		Sponge.getEventManager().registerListeners(this, new InteractBlockListener());
 
 		getLogger().info("-----------------------------");
 		getLogger().info("AdminShop was made by HassanS6000!");
