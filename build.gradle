@@ -41,8 +41,12 @@ dependencies {
 	compile "org.spongepowered:spongeapi:5.0.0-SNAPSHOT"
 }
 
+
 jar {
-        manifest {
+    includeEmptyDirs = false
+    classifier = 'universal'
+    version = "${project.minecraft.version}-${project.version}"
+    manifest {
         attributes 'FMLAT': 'adminshop_at.cfg'
     }
 }
