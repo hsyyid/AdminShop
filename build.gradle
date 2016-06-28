@@ -24,9 +24,9 @@ group = "io.github.hsyyid"
 archivesBaseName = "AdminShop"
 
 minecraft {
-    version = "1.9-12.16.1.1906"
+    version = "1.9.4-12.17.0.1987"
     runDir = "run"
-    mappings = "snapshot_20160312"
+    mappings = "snapshot_20160518"
 }
 
 repositories {
