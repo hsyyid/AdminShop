@@ -8,6 +8,7 @@ import net.minecraft.entity.EntityHanging;
 import net.minecraft.util.EnumFacing;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.hanging.ItemFrame;
@@ -135,16 +136,16 @@ public class InteractBlockListener
 				{
 					if (!player.get(Keys.IS_SNEAKING).orElse(false))
 					{
-						if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() == shop.getItem().getCount())
+						if (player.getItemInHand(HandTypes.MAIN_HAND).isPresent() && player.getItemInHand(HandTypes.MAIN_HAND).get().getItem() == shop.getItem().getType() && player.getItemInHand(HandTypes.MAIN_HAND).get().getQuantity() == shop.getItem().getCount())
 						{
-							player.setItemInHand(null);
+							player.setItemInHand(HandTypes.MAIN_HAND, null);
 						}
-						else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() > shop.getItem().getCount())
+						else if (player.getItemInHand(HandTypes.MAIN_HAND).isPresent() && player.getItemInHand(HandTypes.MAIN_HAND).get().getItem() == shop.getItem().getType() && player.getItemInHand(HandTypes.MAIN_HAND).get().getQuantity() > shop.getItem().getCount())
 						{
-							ItemStack stack = player.getItemInHand().get();
+							ItemStack stack = player.getItemInHand(HandTypes.MAIN_HAND).get();
 							int quantityInHand = stack.getQuantity() - shop.getItem().getCount();
 							stack.setQuantity(quantityInHand);
-							player.setItemInHand(stack);
+							player.setItemInHand(HandTypes.MAIN_HAND, stack);
 						}
 						else
 						{

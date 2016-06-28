@@ -7,6 +7,7 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -30,9 +31,9 @@ public class SetShopExecutor implements CommandExecutor
 				AdminShop.shopModifiers.remove(shopModifier.get());
 			}
 
-			if (player.getItemInHand().isPresent())
+			if (player.getItemInHand(HandTypes.MAIN_HAND).isPresent())
 			{
-				AdminShop.shopModifiers.add(new ShopModifier(player.getUniqueId(), player.getItemInHand().get().createSnapshot(), price, buyShop.isPresent() ? buyShop.get() : false));
+				AdminShop.shopModifiers.add(new ShopModifier(player.getUniqueId(), player.getItemInHand(HandTypes.MAIN_HAND).get().createSnapshot(), price, buyShop.isPresent() ? buyShop.get() : false));
 				player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GREEN, "Right click a sign!"));
 			}
 			else
