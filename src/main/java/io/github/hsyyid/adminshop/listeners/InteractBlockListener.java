@@ -16,6 +16,8 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.NamedCause;
+import org.spongepowered.api.event.cause.entity.spawn.SpawnCause;
+import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
@@ -65,7 +67,7 @@ public class InteractBlockListener
 
 								if (((EntityHanging) entity).onValidSurface())
 								{
-									location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(player)));
+									location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(SpawnCause.builder().type(SpawnTypes.PLUGIN).build())));
 								}
 							}
 						}
@@ -109,7 +111,7 @@ public class InteractBlockListener
 
 							if (((EntityHanging) entity).onValidSurface())
 							{
-								location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(player)));
+								location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(SpawnCause.builder().type(SpawnTypes.PLUGIN).build())));
 							}
 						}
 					}
@@ -131,36 +133,39 @@ public class InteractBlockListener
 
 				if (shop.isBuyShop())
 				{
-					if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() == shop.getItem().getCount())
+					if (!player.get(Keys.IS_SNEAKING).orElse(false))
 					{
-						player.setItemInHand(null);
-					}
-					else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() > shop.getItem().getCount())
-					{
-						ItemStack stack = player.getItemInHand().get();
-						int quantityInHand = stack.getQuantity() - shop.getItem().getCount();
-						stack.setQuantity(quantityInHand);
-						player.setItemInHand(stack);
-					}
-					else
-					{
-						player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
-						return;
-					}
+						if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() == shop.getItem().getCount())
+						{
+							player.setItemInHand(null);
+						}
+						else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() > shop.getItem().getCount())
+						{
+							ItemStack stack = player.getItemInHand().get();
+							int quantityInHand = stack.getQuantity() - shop.getItem().getCount();
+							stack.setQuantity(quantityInHand);
+							player.setItemInHand(stack);
+						}
+						else
+						{
+							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
+							return;
+						}
 
-					ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), price, Cause.of(NamedCause.source(player))).getResult();
+						ResultType result = playerAccount.deposit(AdminShop.economyService.getDefaultCurrency(), price, Cause.of(NamedCause.source(player))).getResult();
 
-					if (result == ResultType.SUCCESS)
-					{
-						player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + shop.getItem().getCount() + " " + shop.getItem().getType().getTranslation().get() + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
-					}
-					else if (result == ResultType.ACCOUNT_NO_SPACE)
-					{
-						player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Your account has no space for this!"));
-					}
-					else
-					{
-						player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
+						if (result == ResultType.SUCCESS)
+						{
+							player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + shop.getItem().getCount() + " " + shop.getItem().getType().getTranslation().get() + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+						}
+						else if (result == ResultType.ACCOUNT_NO_SPACE)
+						{
+							player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Your account has no space for this!"));
+						}
+						else
+						{
+							player.sendMessage(Text.of(TextColors.DARK_RED, "Error! ", TextColors.RED, "Transaction failed!"));
+						}
 					}
 				}
 				else
