@@ -56,20 +56,17 @@ public class InteractBlockListener
 						if (ConfigManager.shouldAddItemFrames() && location.getBlock().getType() == BlockTypes.WALL_SIGN)
 						{
 							Location<World> frameLocation = location.add(0, 1, 0);
-							Optional<Entity> itemFrame = location.getExtent().createEntity(EntityTypes.ITEM_FRAME, frameLocation.getPosition());
+							Entity itemFrame = location.getExtent().createEntity(EntityTypes.ITEM_FRAME, frameLocation.getPosition());
 
-							if (itemFrame.isPresent())
+							ItemFrame entity = (ItemFrame) itemFrame;
+							entity.offer(Keys.REPRESENTED_ITEM, shopModifier.get().getItem());
+							// TODO: Update this when Sponge supports it
+							// entity.offer(Keys.DIRECTION, location.getBlock().get(Keys.DIRECTION).get());
+							((EntityHanging) entity).updateFacingWithBoundingBox(EnumFacing.byName(location.getBlock().get(Keys.DIRECTION).get().name()));
+
+							if (((EntityHanging) entity).onValidSurface())
 							{
-								ItemFrame entity = (ItemFrame) itemFrame.get();
-								entity.offer(Keys.REPRESENTED_ITEM, shopModifier.get().getItem());
-								// TODO: Update this when Sponge supports it
-								// entity.offer(Keys.DIRECTION, location.getBlock().get(Keys.DIRECTION).get());
-								((EntityHanging) entity).updateFacingWithBoundingBox(EnumFacing.byName(location.getBlock().get(Keys.DIRECTION).get().name()));
-
-								if (((EntityHanging) entity).onValidSurface())
-								{
-									location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(SpawnCause.builder().type(SpawnTypes.PLUGIN).build())));
-								}
+								location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(SpawnCause.builder().type(SpawnTypes.PLUGIN).build())));
 							}
 						}
 
@@ -100,20 +97,18 @@ public class InteractBlockListener
 						Collection<Entity> foundItemFrames = location.getExtent().getEntities(e -> e.getLocation().equals(frameLocation) && e.getType() == EntityTypes.ITEM_FRAME);
 						foundItemFrames.forEach(e -> e.remove());
 
-						Optional<Entity> itemFrame = location.getExtent().createEntity(EntityTypes.ITEM_FRAME, frameLocation.getPosition());
+						Entity itemFrame = location.getExtent().createEntity(EntityTypes.ITEM_FRAME, frameLocation.getPosition());
 
-						if (itemFrame.isPresent())
+
+						ItemFrame entity = (ItemFrame) itemFrame;
+						entity.offer(Keys.REPRESENTED_ITEM, shopModifier.get().getItem());
+						// TODO: Update this when Sponge supports it
+						// entity.offer(Keys.DIRECTION, location.getBlock().get(Keys.DIRECTION).get());
+						((EntityHanging) entity).updateFacingWithBoundingBox(EnumFacing.byName(location.getBlock().get(Keys.DIRECTION).get().name()));
+
+						if (((EntityHanging) entity).onValidSurface())
 						{
-							ItemFrame entity = (ItemFrame) itemFrame.get();
-							entity.offer(Keys.REPRESENTED_ITEM, shopModifier.get().getItem());
-							// TODO: Update this when Sponge supports it
-							// entity.offer(Keys.DIRECTION, location.getBlock().get(Keys.DIRECTION).get());
-							((EntityHanging) entity).updateFacingWithBoundingBox(EnumFacing.byName(location.getBlock().get(Keys.DIRECTION).get().name()));
-
-							if (((EntityHanging) entity).onValidSurface())
-							{
-								location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(SpawnCause.builder().type(SpawnTypes.PLUGIN).build())));
-							}
+							location.getExtent().spawnEntity(entity, Cause.of(NamedCause.source(SpawnCause.builder().type(SpawnTypes.PLUGIN).build())));
 						}
 					}
 
