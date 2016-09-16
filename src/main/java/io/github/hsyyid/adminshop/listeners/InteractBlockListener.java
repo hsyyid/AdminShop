@@ -135,18 +135,7 @@ public class InteractBlockListener
 				{
 					if (!player.get(Keys.IS_SNEAKING).orElse(false))
 					{
-						if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() == shop.getItem().getCount())
-						{
-							player.setItemInHand(null);
-						}
-						else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() > shop.getItem().getCount())
-						{
-							ItemStack stack = player.getItemInHand().get();
-							int quantityInHand = stack.getQuantity() - shop.getItem().getCount();
-							stack.setQuantity(quantityInHand);
-							player.setItemInHand(stack);
-						}
-						else
+						if (!(player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() > shop.getItem().getCount())
 						{
 							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
 							return;
@@ -157,6 +146,17 @@ public class InteractBlockListener
 						if (result == ResultType.SUCCESS)
 						{
 							player.sendMessage(Text.builder().append(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.GOLD, "You have just sold " + shop.getItem().getCount() + " " + shop.getItem().getType().getTranslation().get() + " for " + price + " ")).append(AdminShop.economyService.getDefaultCurrency().getPluralDisplayName()).build());
+							if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() == shop.getItem().getCount())
+							{
+								player.setItemInHand(null);
+							}
+							else if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() > shop.getItem().getCount())
+							{
+								ItemStack stack = player.getItemInHand().get();
+								int quantityInHand = stack.getQuantity() - shop.getItem().getCount();
+								stack.setQuantity(quantityInHand);
+								player.setItemInHand(stack);
+							}
 						}
 						else if (result == ResultType.ACCOUNT_NO_SPACE)
 						{
