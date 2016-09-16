@@ -135,7 +135,7 @@ public class InteractBlockListener
 				{
 					if (!player.get(Keys.IS_SNEAKING).orElse(false))
 					{
-						if (!(player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() > shop.getItem().getCount())
+						if (!(player.getItemInHand().isPresent() && player.getItemInHand().get().getItem() == shop.getItem().getType() && player.getItemInHand().get().getQuantity() > shop.getItem().getCount()))
 						{
 							player.sendMessage(Text.of(TextColors.DARK_RED, "[AdminShop]: ", TextColors.DARK_RED, "Error! ", TextColors.RED, "You're not holding this item or the right quantity of this item!"));
 							return;
