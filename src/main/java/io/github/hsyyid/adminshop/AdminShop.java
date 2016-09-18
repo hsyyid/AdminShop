@@ -34,7 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-@Plugin(id = "io.github.hsyyid.adminshop", name = "AdminShop", description = "This plugin adds sign shops for users to buy items.", version = "1.8.1")
+@Plugin(id = "adminshop", name = "AdminShop", description = "This plugin adds sign shops for users to buy items.", version = "1.8.2")
 public class AdminShop
 {
 	protected AdminShop()
@@ -79,13 +79,27 @@ public class AdminShop
 		// Create Config Directory for AdminShop
 		if (!Files.exists(configDir))
 		{
-			try
+			if (Files.exists(configDir.resolveSibling("io.github.hsyyid.adminshop")))
 			{
-				Files.createDirectories(configDir);
+				try
+				{
+					Files.move(configDir.resolveSibling("io.github.hsyyid.adminshop"), configDir);
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
 			}
-			catch (IOException e)
+			else
 			{
-				e.printStackTrace();
+				try
+				{
+					Files.createDirectories(configDir);
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
 			}
 		}
 
@@ -107,14 +121,7 @@ public class AdminShop
 		// Create shops.conf
 		ShopConfig.getConfig().setup();
 
-		CommandSpec setItemShopCommandSpec = CommandSpec.builder()
-			.description(Text.of("Creates AdminShops"))
-			.permission("adminshop.command.setshop")
-			.arguments(GenericArguments.seq(
-				GenericArguments.onlyOne(GenericArguments.doubleNum(Text.of("price"))), 
-				GenericArguments.optional(GenericArguments.onlyOne(GenericArguments.bool(Text.of("buy shop"))))))
-			.executor(new SetShopExecutor())
-			.build();
+		CommandSpec setItemShopCommandSpec = CommandSpec.builder().description(Text.of("Creates AdminShops")).permission("adminshop.command.setshop").arguments(GenericArguments.seq(GenericArguments.onlyOne(GenericArguments.doubleNum(Text.of("price"))), GenericArguments.optional(GenericArguments.onlyOne(GenericArguments.bool(Text.of("buy shop")))))).executor(new SetShopExecutor()).build();
 
 		Sponge.getCommandManager().register(this, setItemShopCommandSpec, "setshop");
 
